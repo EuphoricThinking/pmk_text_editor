@@ -10,8 +10,8 @@ CFLAGS = $(FLAGS) -Wall -g \
 LDFLAGS = $(FLAGS) -Wl,--gc-sections -nostartfiles \
 -L/opt/arm/stm32/lds -Tstm32f411re.lds
 vpath %.c /opt/arm/stm32/src
-OBJECTS = leds_main.o startup_stm32.o delay.o gpio.o
-TARGET = leds
+OBJECTS = kalk.o startup_stm32.o delay.o gpio.o
+TARGET = kalk
 .SECONDARY: $(TARGET).elf $(OBJECTS)
 all: $(TARGET).bin
 %.elf : $(OBJECTS)
