@@ -210,7 +210,7 @@ TIMER CONFIGURATION AND USAGE
 /*
 Initialization of the timer WITHOUT starting
 */
-void set_initial_TIM3_registers_values_without_starting(void) {
+void set_clock_and_initial_TIM3_registers_values_without_starting(void) {
 	/*
 	Enable peripheral TIM3 clock - configured in the function responsible
 	for TIM3 configuration in order to separate program functionalities
@@ -289,7 +289,10 @@ LEDS
 
 **************************/
 
-void configure_leds(void) {
+void configure_clock_gpio_leds(void) {
+	RCC->AHB1ENR |= RCC_AHB1ENR_GPIOAEN | 
+					RCC_AHB1ENR_GPIOBEN;	
+
 	RedLEDoff();
 	GreenLEDoff();
 	BlueLEDoff();
@@ -451,11 +454,9 @@ void set_columns_high_state(void) {
 	}
 }
 
-void configure_clock_for_leds_rows_cols_interruptions(void) {
-	RCC->AHB1ENR |= RCC_AHB1ENR_GPIOAEN | 	//LEDS
-					RCC_AHB1ENR_GPIOBEN |	// LEDS
-					RCC_AHB1ENR_GPIOCEN | 	// LEDS + keypad
-					RCC_AHB1ENR_DMA1EN; //	|	// DMA
+void configure_clock_rows_cols_interruptions(void) {
+	RCC->AHB1ENR |= RCC_AHB1ENR_GPIOCEN | 		// keypad
+					RCC_AHB1ENR_DMA1EN; 		// DMA
 					// RCC_APB1ENR_TIM3EN;		// Timer TIM3
 
 	// Usart 
@@ -464,8 +465,8 @@ void configure_clock_for_leds_rows_cols_interruptions(void) {
 	// SYSCFGEN (INTERRUPT)
 	RCC->APB2ENR |= RCC_APB2ENR_SYSCFGEN;
 
-	// Clock needs some time to be turned on // taktowanie
-	__NOP();
+	// // Clock needs some time to be turned on // taktowanie
+	// __NOP();
 }
 
 void usart_configuration(void) {
@@ -525,9 +526,19 @@ void dma_configuration(void) {
 }
 
 void configure(void) {
-	configure_clock_for_leds_rows_cols_interruptions();
-	configure_leds();
-	configure_keypad();
+	configure_clock_rows_cols_interruptions();
+	configure_clock_gpio_leds();
+
+	// Clock needs some time to be turned on // taktowanie
+	__NOP();
+
+	set_clock_and_initial_TIM3_registers_values_without_starting();
+	enable_interruptions_TIM3();
+
+	set_columns_low_state();
+	configure_gpio_keypad();
+
+	configure_rows_EXTI_NVIC();
 }
 
 void initialize_send_DMA(char* mess, int len) {
