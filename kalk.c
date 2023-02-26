@@ -443,6 +443,32 @@ void configure_row_EXTI_NVIC(void) {
 	NVIC_EnableIRQ(EXTI9_5_IRQn);
 }
 
+void EXTI9_5_IRQHandler(void) {
+	if (EXTI->PR & EXTI_PR_PR6) {
+		EXTI->PR = EXTI_PR_PR6;
+		// queue_to_send(DOWN_BTN*2 + check_single_state(DOWN_BTN));
+		// TODO
+	}
+
+	if (EXTI->PR & EXTI_PR_PR7) {
+		EXTI->PR = EXTI_PR_PR7;
+		// queue_to_send(UP_BTN*2 + check_single_state(UP_BTN));
+		// TODO
+	}
+
+	if (EXTI->PR & EXTI_PR_PR8) {
+		EXTI->PR = EXTI_PR_PR8;
+		// queue_to_send(UP_BTN*2 + check_single_state(UP_BTN));
+		// TODO
+	}
+
+	if (EXTI->PR & EXTI_PR_PR9) {
+		EXTI->PR = EXTI_PR_PR9;
+		// queue_to_send(UP_BTN*2 + check_single_state(UP_BTN));
+		// TODO
+	}
+}
+
 void set_low_state(int col_row_pin) {
 	GPIOC->BSRR = 1U << (col_row_pin + BSRR_UPPER_HALF);
 }
