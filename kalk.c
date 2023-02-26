@@ -405,6 +405,10 @@ void configure_rows_EXTI_NVIC(void) {
 }
 
 void EXTI9_5_IRQHandler(void) {
+	// Disable row interruptions
+	NVIC_DisableIRQ(EXTI9_5_IRQn);
+
+	// Set interrupt flags to zero
 	if (EXTI->PR & EXTI_PR_PR6) {
 		EXTI->PR = EXTI_PR_PR6;
 		// queue_to_send(DOWN_BTN*2 + check_single_state(DOWN_BTN));
@@ -428,6 +432,13 @@ void EXTI9_5_IRQHandler(void) {
 		// queue_to_send(UP_BTN*2 + check_single_state(UP_BTN));
 		// TODO
 	}
+
+	set_columns_high_state();
+
+	// Set set the register storing current counter value to zero (CNT - counter)
+	TIM3->CNT = 0;
+
+	start_timer();
 }
 
 void set_low_state(int col_row_pin) {
