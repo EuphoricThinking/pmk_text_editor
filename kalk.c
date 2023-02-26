@@ -672,6 +672,7 @@ void DMA1_Stream6_IRQHandler() {
 int main() {
 	configure();
 	// initialize_mess_length();
+	BlueLEDon();
 
 	while (1) {
 	}
