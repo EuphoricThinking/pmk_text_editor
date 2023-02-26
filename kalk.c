@@ -671,7 +671,7 @@ void DMA1_Stream6_IRQHandler() {
 
 int main() {
 	configure();
-	initialize_mess_length();
+	// initialize_mess_length();
 
 	while (1) {
 	}
