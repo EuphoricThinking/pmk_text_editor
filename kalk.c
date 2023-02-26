@@ -324,7 +324,7 @@ KEYPAD CONFIGURATION
 
 **********/
 
-void configure_keypad(void) {
+void configure_gpio_keypad(void) {
 	// TODO
 
 	// Configure columns
@@ -358,7 +358,10 @@ void configure_keypad(void) {
 
 
 	// Configure rows
-	
+	// ROW1 - PC6
+	GPIOinConfigure(GPIOC, 6, GPIO_PuPd_UP,
+					EXTI_Mode_Interrupt,
+					EXTI_Trigger_Rising);
 	// wyjście przewsobne - push-pull
 	// rezystor podciągający pull up
 	// rezystor ściągający pull down
