@@ -184,14 +184,45 @@ int check_single_state(int id) {
 	}
 }
 
+void configure_TIM3(void) {
+	/*
+	Enable peripheral TIM3 clock - configured in the function responsible
+	for TIM3 configuration in order to separate program functionalities
+	*/
+	RCC->APB1ENR |= RCC_APB1ENR_TIM3EN;
+
+	// Incremental counting mode
+	TIM3->CR1 = TIM_COUNTERMODE_UP;	// A control register
+
+	/* 
+	The default frequency is 16 MHz. Changing the prescaler value turns
+	an 80 MHz clock into a 1 MHz clock, which ticks once per 1 microsecond.
+
+	-1 results from the formula for decreasing the frequency of the counter update:
+	CLOCK_COUNTER3 = CLOCK_TIMER3 / (TIMER3->PSC + 1)
+	*/
+	TIM3->PSC = 16 - 1; // A prescaler
+
+	/*
+	Stores the value up to which the counter counts. 
+	
+	Since 1 microsecond = 0.0001 millisecond and we want to trigger an interruption
+	after 10 ms, we decide that the counter has to count 10000 ticks.
+	*/
+	TIM3->ARR = 10000	// An auto-reload register
+}
 
 void configure(void) {
 	// LEDS + DMA
-	RCC->AHB1ENR |= RCC_AHB1ENR_GPIOAEN | RCC_AHB1ENR_GPIOCEN |
-					RCC_AHB1ENR_GPIOBEN | RCC_AHB1ENR_DMA1EN;
+	RCC->AHB1ENR |= RCC_AHB1ENR_GPIOAEN | 	//LEDS
+					RCC_AHB1ENR_GPIOBEN |	// LEDS
+					RCC_AHB1ENR_GPIOCEN | 	// LEDS + keypad
+					RCC_AHB1ENR_DMA1EN; //	|	// DMA
+					// RCC_APB1ENR_TIM3EN;		// Timer TIM3
 
-	// Usart
-	RCC->APB1ENR |= RCC_APB1ENR_USART2EN;
+	// Usart 
+	//TODO REMOVED
+	// RCC->APB1ENR |= RCC_APB1ENR_USART2EN;
 
 	// SYSCFGEN (INTERRUPT)
 	RCC->APB2ENR |= RCC_APB2ENR_SYSCFGEN;
