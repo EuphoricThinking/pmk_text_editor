@@ -383,55 +383,6 @@ void configure_gpio_keypad(void) {
 	// rezystor ściągający pull down
 	// TYLKO WIERSZE
 	// IRQ
-	// 
-	// USER - PC13
-	// GPIO_PuPd_UP before
-/*	GPIOinConfigure(GPIOC, 13, GPIO_PuPd_NOPULL,
-					EXTI_Mode_Interrupt,
-					EXTI_Trigger_Rising_Falling);
-
-	// LEFT - PB3
-	GPIOinConfigure(GPIOB, 3, GPIO_PuPd_NOPULL,
-					EXTI_Mode_Interrupt,
-					EXTI_Trigger_Rising_Falling);
-
-	// RIGHT - PB4
-	GPIOinConfigure(GPIOB, 4, GPIO_PuPd_NOPULL,
-					EXTI_Mode_Interrupt,
-					EXTI_Trigger_Rising_Falling);
-
-	// UP - PB5
-	GPIOinConfigure(GPIOB, 5, GPIO_PuPd_NOPULL,
-					EXTI_Mode_Interrupt,
-					EXTI_Trigger_Rising_Falling);
-
-	// DOWN - PB6
-	GPIOinConfigure(GPIOB, 6, GPIO_PuPd_NOPULL,
-					EXTI_Mode_Interrupt,
-					EXTI_Trigger_Rising_Falling);
-
-	// ACTION - PB10
-	GPIOinConfigure(GPIOB, 10, GPIO_PuPd_NOPULL,
-					EXTI_Mode_Interrupt,
-					EXTI_Trigger_Rising_Falling);
-
-	// AT MODE - PA0
-	GPIOinConfigure(GPIOA, 0, GPIO_PuPd_NOPULL,
-					EXTI_Mode_Interrupt,
-					EXTI_Trigger_Rising_Falling);
-
-	// Clear EXTI bits
-	EXTI->PR = 	EXTI_PR_PR13 | EXTI_PR_PR10 |
-				EXTI_PR_PR0 | EXTI_PR_PR6 |
-				EXTI_PR_PR5 | EXTI_PR_PR4 |
-				EXTI_PR_PR3;
-
-	// Enable required IRQs
-	NVIC_EnableIRQ(EXTI0_IRQn);
-	NVIC_EnableIRQ(EXTI3_IRQn);
-	NVIC_EnableIRQ(EXTI4_IRQn);
-	NVIC_EnableIRQ(EXTI9_5_IRQn);
-	NVIC_EnableIRQ(EXTI15_10_IRQn); */
 }
 
 void configure_row_EXTI_NVIC(void) {
@@ -476,6 +427,8 @@ void set_low_state(int col_row_pin) {
 void set_high_state(int col_row_pin) {
 	GPIOC->BSRR = 1U << col_row_pin;
 }
+
+
 
 void configure(void) {
 	// LEDS + DMA
@@ -600,46 +553,6 @@ void queue_to_send(int message_index) {
 	else {
 		push(message_index);
 	}
-}
-
-// EXTI IRQ handlers implementation
-void EXTI15_10_IRQHandler(void) {
-	if (EXTI->PR & EXTI_PR_PR10) {
-		EXTI->PR = EXTI_PR_PR10;
-		queue_to_send(ACTION_BTN*2 + check_single_state(ACTION_BTN));
-	}
-
-	if (EXTI->PR & EXTI_PR_PR13) {
-		EXTI->PR = EXTI_PR_PR13;
-		queue_to_send(USER_BTN*2 + check_single_state(USER_BTN));
-	}
-}
-
-void EXTI9_5_IRQHandler(void) {
-	if (EXTI->PR & EXTI_PR_PR5) {
-		EXTI->PR = EXTI_PR_PR5;
-		queue_to_send(UP_BTN*2 + check_single_state(UP_BTN));
-	}
-
-	if (EXTI->PR & EXTI_PR_PR6) {
-		EXTI->PR = EXTI_PR_PR6;
-		queue_to_send(DOWN_BTN*2 + check_single_state(DOWN_BTN));
-	}
-}
-
-void EXTI4_IRQHandler(void) {
-	EXTI->PR = EXTI_PR_PR4;
-	queue_to_send(RIGHT_BTN*2 + check_single_state(RIGHT_BTN));
-}
-
-void EXTI3_IRQHandler(void) {
-	EXTI->PR = EXTI_PR_PR3;
-	queue_to_send(LEFT_BTN*2 + check_single_state(LEFT_BTN));
-}
-
-void EXTI0_IRQHandler(void) {
-	EXTI->PR = EXTI_PR_PR0;
-	queue_to_send(AT_MODE*2 + check_single_state(AT_MODE));
 }
 
 // DMA1 Stream6 IRQ implementation
