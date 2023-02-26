@@ -184,7 +184,17 @@ int check_single_state(int id) {
 	}
 }
 
-void configure_TIM3(void) {
+/************************************
+
+TIMER CONFIGURATION AND USAGE
+
+*************************************/
+
+
+/*
+Initialization of the timer WITHOUT starting
+*/
+void set_initial_TIM3_registers_values_without_starting(void) {
 	/*
 	Enable peripheral TIM3 clock - configured in the function responsible
 	for TIM3 configuration in order to separate program functionalities
@@ -192,6 +202,7 @@ void configure_TIM3(void) {
 	RCC->APB1ENR |= RCC_APB1ENR_TIM3EN;
 
 	// Incremental counting mode
+	// TIM_CR1_URS // Update request source, ored on slides
 	TIM3->CR1 = TIM_COUNTERMODE_UP;	// A control register
 
 	/* 
@@ -210,6 +221,48 @@ void configure_TIM3(void) {
 	after 10 ms, we decide that the counter has to count 10000 ticks.
 	*/
 	TIM3->ARR = 10000	// An auto-reload register
+
+	/*
+	Force an update event in order to use the values loaded into registers
+	from the first cycle.
+	*/
+	TIM3->EGR = TIM_EGR_UG;
+}
+
+void enable_interruptions_TIM3(void) {
+	/*
+	TIM3->DIER		DMA and interrupt enable register
+I 	TIM3->SR 		status register
+
+
+	Enable interruptions on the counter level
+
+	TIM_SR_UIF 		Update interrupt flag
+	TIM_SR_CC1IF 	Capture/compare 1 interrupt flag.
+	TIM_DIER_UIE 	Update interrupt enable
+	TIM_DIER_CC1IE 	Capture/compare 1 interrupt enable
+	*/
+	TIM3->SR = ~(TIM_SR_UIF | TIM_SR_CC1IF);
+	TIM3->DIER = TIM_DIER_UIE | TIM_DIER_CC1IE;
+
+	// Enable interruptions on NVIC level
+	NVIC_EnableIRQ(TIM3_IRQn);
+}
+
+void TIM3_IRQHandler(void) {
+	uint32_t it_status = TIM3->SR & TIM3->DIER;
+	if (it_status & TIM_SR_UIF) {
+		TIM3->SR = ~TIM_SR_UIF;
+		// TODO
+	}
+	if (it_status & TIM_SR_CC1IF) {
+		TIM3->SR = ~TIM_SR_CC1IF;
+		// TODO
+	}
+}
+
+void start_timer(void) {
+	TIM3->CR1 |= TIM_CR1_CEN;
 }
 
 void configure(void) {
