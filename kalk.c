@@ -361,7 +361,23 @@ void configure_gpio_keypad(void) {
 	// ROW1 - PC6
 	GPIOinConfigure(GPIOC, 6, GPIO_PuPd_UP,
 					EXTI_Mode_Interrupt,
-					EXTI_Trigger_Rising);
+					EXTI_Trigger_Falling);
+
+	// ROW2 - PC7
+	GPIOinConfigure(GPIOC, 7, GPIO_PuPd_UP,
+					EXTI_Mode_Interrupt,
+					EXTI_Trigger_Falling);
+
+	// ROW3 - PC8
+	GPIOinConfigure(GPIOC, 8, GPIO_PuPd_UP,
+					EXTI_Mode_Interrupt,
+					EXTI_Trigger_Falling);
+
+	// ROW4 - PC9
+	GPIOinConfigure(GPIOC, 9, GPIO_PuPd_UP,
+					EXTI_Mode_Interrupt,
+					EXTI_Trigger_Falling);
+
 	// wyjście przewsobne - push-pull
 	// rezystor podciągający pull up
 	// rezystor ściągający pull down
@@ -370,7 +386,7 @@ void configure_gpio_keypad(void) {
 	// 
 	// USER - PC13
 	// GPIO_PuPd_UP before
-	GPIOinConfigure(GPIOC, 13, GPIO_PuPd_NOPULL,
+/*	GPIOinConfigure(GPIOC, 13, GPIO_PuPd_NOPULL,
 					EXTI_Mode_Interrupt,
 					EXTI_Trigger_Rising_Falling);
 
@@ -402,7 +418,7 @@ void configure_gpio_keypad(void) {
 	// AT MODE - PA0
 	GPIOinConfigure(GPIOA, 0, GPIO_PuPd_NOPULL,
 					EXTI_Mode_Interrupt,
-					EXTI_Trigger_Rising_Falling);
+					EXTI_Trigger_Rising_Falling); */
 
 	// Clear EXTI bits
 	EXTI->PR = 	EXTI_PR_PR13 | EXTI_PR_PR10 |
