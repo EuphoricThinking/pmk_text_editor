@@ -131,6 +131,7 @@ USART_CR1_PS)
 #define ROW3 			7
 #define ROW4 			8
 
+
 #define BSRR_UPPER_HALF	16
 
 
@@ -326,7 +327,15 @@ KEYPAD CONFIGURATION
 void configure_keypad(void) {
 	// TODO
 
+	// COL1 - PC0
+	GPIOoutConfigure(GPIOC, 
+					  0,
+                      GPIO_OType_PP, 
+					  GPIO_Low_Speed,
+                      GPIO_PuPd_NOPULL);
 	// wyjście przewsobne - push-pull
+	// rezystor podciągający pull up
+	// rezystor ściągający pull down
 	// TYLKO WIERSZE
 	// IRQ
 	// 
