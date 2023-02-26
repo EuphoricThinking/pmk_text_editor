@@ -388,10 +388,14 @@ void configure_gpio_keypad(void) {
 	// IRQ
 }
 
-void configure_row_EXTI_NVIC(void) {
+void set_rows_EXTI_to_zero(void) {
 	// Clear EXTI bits for rows: ports PC6, PC7, PC8, PC9
 	EXTI->PR = 	EXTI_PR_PR6 | EXTI_PR_PR7 |
 				EXTI_PR_PR8 | EXTI_PR_PR9;
+}
+
+void configure_row_EXTI_NVIC(void) {
+	set_rows_EXTI_to_zero();
 
 	// Enable required IRQs - for lines 6, 7, 8, 9
 	NVIC_EnableIRQ(EXTI9_5_IRQn);
@@ -435,6 +439,14 @@ void set_columns_low_state(void) {
 	int pin_index = COL1;
 	while (pin_index <= COL4) {
 		set_low_state(key_pins[pin_index]);
+		pin_index++;
+	}
+}
+
+void set_columns_high_state(void) {
+	int pin_index = COL1;
+	while (pin_index <= COL4) {
+		set_high_state(key_pins[pin_index]);
 		pin_index++;
 	}
 }
