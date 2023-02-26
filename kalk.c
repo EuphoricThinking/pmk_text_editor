@@ -108,6 +108,20 @@ USART_CR1_PS)
 #define NUM_LEDS 4
 
 
+/* CALC DEFINES */
+#define KEYBOARD_GPIO 	GPIOC
+
+#define COL1_PIN 		0 	// KD1
+#define COL2_PIN		1	// KD2
+#define COL3_PIN		2	// KD3
+#define COL4_PIN		3	// KD4
+
+#define ROW1_PIN		6	// W1
+#define ROW2_PIN		7	// W2
+#define ROW3_PIN		8	// W3
+#define ROW4_PIN		9	// W4
+
+
 #define RedLEDon() \
 RED_LED_GPIO->BSRR = 1 << (RED_LED_PIN + 16)
 #define RedLEDoff() \
