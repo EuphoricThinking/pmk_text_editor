@@ -345,6 +345,10 @@ void TIM3_IRQHandler(void) {
 		}
 		else {
 			// None of the key is pressed or has been pressed due to the contact vibration
+			
+			RedLEDoff();
+			GreenLEDon();
+			
 			times_press_detected = 0;
 			
 			stop_timer();
