@@ -108,18 +108,28 @@ USART_CR1_PS)
 #define NUM_LEDS 4
 
 
-/* CALC DEFINES */
+/* KEYBOARD DEFINES */
 #define KEYBOARD_GPIO 	GPIOC
 
-#define COL1_PIN 		0 	// KD1
-#define COL2_PIN		1	// KD2
-#define COL3_PIN		2	// KD3
-#define COL4_PIN		3	// KD4
+#define PIN_COL1		0 	// KD1
+#define PIN_COL2		1	// KD2
+#define PIN_COL3		2	// KD3
+#define PIN_COL4		3	// KD4
 
-#define ROW1_PIN		6	// W1
-#define ROW2_PIN		7	// W2
-#define ROW3_PIN		8	// W3
-#define ROW4_PIN		9	// W4
+#define PIN_ROW1		6	// W1
+#define PIN_ROW2		7	// W2
+#define PIN_ROW3		8	// W3
+#define PIN_ROW4		9	// W4
+
+#define COL1 			0
+#define COL2 			1
+#define COL3 			2
+#define COL4 			4
+
+#define ROW1 			5
+#define ROW2 			6
+#define ROW3 			7
+#define ROW4 			8
 
 
 #define RedLEDon() \
@@ -314,7 +324,8 @@ KEYPAD CONFIGURATION
 void configure_keypad(void) {
 	// TODO
 
-
+	// wyjście przewsobne - push-pull
+	// TYLKO WIERSZE
 	// IRQ
 	// 
 	// USER - PC13
