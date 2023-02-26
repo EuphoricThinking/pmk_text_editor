@@ -131,6 +131,8 @@ USART_CR1_PS)
 #define ROW3 			7
 #define ROW4 			8
 
+#define BSRR_UPPER_HALF	16
+
 
 #define RedLEDon() \
 RED_LED_GPIO->BSRR = 1 << (RED_LED_PIN + 16)
@@ -376,6 +378,14 @@ void configure_keypad(void) {
 	NVIC_EnableIRQ(EXTI4_IRQn);
 	NVIC_EnableIRQ(EXTI9_5_IRQn);
 	NVIC_EnableIRQ(EXTI15_10_IRQn);
+}
+
+void set_low_state(int col_row_pin) {
+	GPIOC->BSRR = 1U << (col_row_pin + BSRR_UPPER_HALF);
+}
+
+void set_high_state(int col_row_pin) {
+	GPIOC->BSRR = 1U << col_row_pin;
 }
 
 void configure(void) {
