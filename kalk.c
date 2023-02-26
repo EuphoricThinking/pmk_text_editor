@@ -265,12 +265,24 @@ I 	TIM3->SR 		status register
 	NVIC_EnableIRQ(TIM3_IRQn);
 }
 
+bool is_key_pressed(void) {
+	return false;
+}
+
 void TIM3_IRQHandler(void) {
 	uint32_t it_status = TIM3->SR & TIM3->DIER;
+	
 	if (it_status & TIM_SR_UIF) {
 		TIM3->SR = ~TIM_SR_UIF;
 		// TODO
+		if (is_key_pressed()) {
+
+		}
+		else {
+			// TODO repeat cycle as many times as needed
+		}
 	}
+
 	if (it_status & TIM_SR_CC1IF) {
 		TIM3->SR = ~TIM_SR_CC1IF;
 		// TODO
@@ -279,6 +291,10 @@ void TIM3_IRQHandler(void) {
 
 void start_timer(void) {
 	TIM3->CR1 |= TIM_CR1_CEN;
+}
+
+void stop_timer(void) {
+	TIM3->CR1 &= ~TIM_CR1_CEN;
 }
 
 
