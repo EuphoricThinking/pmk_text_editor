@@ -131,9 +131,12 @@ USART_CR1_PS)
 #define ROW3 			7
 #define ROW4 			8
 
+#define NUM_KEYS		4
 
 #define BSRR_UPPER_HALF	16
 
+int key_pins[NUM_KEYS*2] = {PIN_COL1, PIN_COL2, PIN_COL3, PIN_COL4,
+							PIN_ROW1, PIN_ROW2, PIN_ROW3, PIN_ROW4};
 
 #define RedLEDon() \
 RED_LED_GPIO->BSRR = 1 << (RED_LED_PIN + 16)
@@ -428,6 +431,13 @@ void set_high_state(int col_row_pin) {
 	GPIOC->BSRR = 1U << col_row_pin;
 }
 
+void set_columns_low_state(void) {
+	int pin_index = COL1;
+	while (pin_index <= COL4) {
+		set_low_state(key_pins[pin_index]);
+		pin_index++;
+	}
+}
 
 
 void configure(void) {
