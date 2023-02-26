@@ -394,7 +394,7 @@ void set_rows_EXTI_to_zero(void) {
 				EXTI_PR_PR8 | EXTI_PR_PR9;
 }
 
-void configure_row_EXTI_NVIC(void) {
+void configure_rows_EXTI_NVIC(void) {
 	set_rows_EXTI_to_zero();
 
 	// Enable required IRQs - for lines 6, 7, 8, 9
@@ -451,9 +451,7 @@ void set_columns_high_state(void) {
 	}
 }
 
-
-void configure(void) {
-	// LEDS + DMA
+void configure_clock_for_leds_rows_cols_interruptions(void) {
 	RCC->AHB1ENR |= RCC_AHB1ENR_GPIOAEN | 	//LEDS
 					RCC_AHB1ENR_GPIOBEN |	// LEDS
 					RCC_AHB1ENR_GPIOCEN | 	// LEDS + keypad
@@ -461,14 +459,18 @@ void configure(void) {
 					// RCC_APB1ENR_TIM3EN;		// Timer TIM3
 
 	// Usart 
-	//TODO REMOVED
-	// RCC->APB1ENR |= RCC_APB1ENR_USART2EN;
+	
 
 	// SYSCFGEN (INTERRUPT)
 	RCC->APB2ENR |= RCC_APB2ENR_SYSCFGEN;
 
 	// Clock needs some time to be turned on // taktowanie
 	__NOP();
+}
+
+void usart_configuration(void) {
+	// Clock
+	RCC->APB1ENR |= RCC_APB1ENR_USART2EN;
 
 	// UART - TDX at PA2, RDX at PA3
 	GPIOafConfigure(GPIOA,
@@ -493,9 +495,11 @@ void configure(void) {
 	// Send and receive via DMA
 	USART2->CR3 = USART_CR3_DMAT | USART_CR3_DMAR;
 
-	configure_leds();
-	configure_keypad();
+	// Peripheral device activation
+	USART2->CR1 |= USART_CR1_UE;
+}
 
+void dma_configuration(void) {
 	// Sending stream DMA configuration
 	DMA1_Stream6->CR = 	4U << 25 |
 						DMA_SxCR_PL_1 |
@@ -518,9 +522,12 @@ void configure(void) {
 
 	NVIC_EnableIRQ(DMA1_Stream6_IRQn);
 	NVIC_EnableIRQ(DMA1_Stream5_IRQn);
+}
 
-	// Peripheral device activation
-	USART2->CR1 |= USART_CR1_UE;
+void configure(void) {
+	configure_clock_for_leds_rows_cols_interruptions();
+	configure_leds();
+	configure_keypad();
 }
 
 void initialize_send_DMA(char* mess, int len) {
