@@ -327,12 +327,38 @@ KEYPAD CONFIGURATION
 void configure_keypad(void) {
 	// TODO
 
+	// Configure columns
 	// COL1 - PC0
 	GPIOoutConfigure(GPIOC, 
 					  0,
                       GPIO_OType_PP, 
 					  GPIO_Low_Speed,
                       GPIO_PuPd_NOPULL);
+
+	// COL2 - PC1
+	GPIOoutConfigure(GPIOC, 
+					  1,
+                      GPIO_OType_PP, 
+					  GPIO_Low_Speed,
+                      GPIO_PuPd_NOPULL);
+
+	// COL3 - PC2
+	GPIOoutConfigure(GPIOC, 
+					  2,
+                      GPIO_OType_PP, 
+					  GPIO_Low_Speed,
+                      GPIO_PuPd_NOPULL);
+
+	// COL4 - PC3
+	GPIOoutConfigure(GPIOC, 
+					  3,
+                      GPIO_OType_PP, 
+					  GPIO_Low_Speed,
+                      GPIO_PuPd_NOPULL);
+
+
+	// Configure rows
+	
 	// wyjście przewsobne - push-pull
 	// rezystor podciągający pull up
 	// rezystor ściągający pull down
