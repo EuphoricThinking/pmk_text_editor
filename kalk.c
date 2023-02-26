@@ -323,7 +323,7 @@ bool check_key_pressed(void) {
 
 void TIM3_IRQHandler(void) {
 	uint32_t it_status = TIM3->SR & TIM3->DIER;
-	
+
 	if (it_status & TIM_SR_UIF) {
 		TIM3->SR = ~TIM_SR_UIF;
 		// TODO
@@ -346,7 +346,7 @@ void TIM3_IRQHandler(void) {
 		else {
 			// None of the key is pressed or has been pressed due to the contact vibration
 			
-			RedLEDoff();
+			BlueLEDoff();
 			GreenLEDon();
 			
 			times_press_detected = 0;
@@ -516,8 +516,8 @@ void EXTI9_5_IRQHandler(void) {
 		// TODO
 	}
 
-	BlueLEDoff();
-	RedLEDon();
+	// BlueLEDoff();
+	// RedLEDon();
 
 	set_columns_high_state();
 
