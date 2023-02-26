@@ -418,7 +418,7 @@ void configure_gpio_keypad(void) {
 	// AT MODE - PA0
 	GPIOinConfigure(GPIOA, 0, GPIO_PuPd_NOPULL,
 					EXTI_Mode_Interrupt,
-					EXTI_Trigger_Rising_Falling); */
+					EXTI_Trigger_Rising_Falling);
 
 	// Clear EXTI bits
 	EXTI->PR = 	EXTI_PR_PR13 | EXTI_PR_PR10 |
@@ -431,7 +431,16 @@ void configure_gpio_keypad(void) {
 	NVIC_EnableIRQ(EXTI3_IRQn);
 	NVIC_EnableIRQ(EXTI4_IRQn);
 	NVIC_EnableIRQ(EXTI9_5_IRQn);
-	NVIC_EnableIRQ(EXTI15_10_IRQn);
+	NVIC_EnableIRQ(EXTI15_10_IRQn); */
+}
+
+void configure_row_EXTI_NVIC(void) {
+	// Clear EXTI bits for rows: ports PC6, PC7, PC8, PC9
+	EXTI->PR = 	EXTI_PR_PR6 | EXTI_PR_PR7 |
+				EXTI_PR_PR8 | EXTI_PR_PR9;
+
+	// Enable required IRQs - for lines 6, 7, 8, 9
+	NVIC_EnableIRQ(EXTI9_5_IRQn);
 }
 
 void set_low_state(int col_row_pin) {
