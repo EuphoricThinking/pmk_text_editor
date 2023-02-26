@@ -2,6 +2,7 @@
 #include <gpio.h>
 #include <delay.h>
 #include <string.h>
+#include <stdbool.h>
 
 // URUCHOM RUN /opt/arm/stm32/ocd/qfn4 
 
@@ -137,6 +138,8 @@ USART_CR1_PS)
 
 #define PRESS_TRIES		4
 
+#define TIM_COUNTERMODE_UP	0
+
 int key_pins[NUM_KEYS*2] = {PIN_COL1, PIN_COL2, PIN_COL3, PIN_COL4,
 							PIN_ROW1, PIN_ROW2, PIN_ROW3, PIN_ROW4};
 
@@ -204,6 +207,43 @@ int check_single_state(int id) {
 	}
 }
 
+/******************
+
+KEYPAD STATES AND REGISTERS
+
+******************/
+void set_rows_EXTI_to_zero(void) {
+	// Clear EXTI bits for rows: ports PC6, PC7, PC8, PC9
+	EXTI->PR = 	EXTI_PR_PR6 | EXTI_PR_PR7 |
+				EXTI_PR_PR8 | EXTI_PR_PR9;
+}
+
+void set_low_state(int col_row_pin) {
+	GPIOC->BSRR = 1U << (col_row_pin + BSRR_UPPER_HALF);
+}
+
+void set_high_state(int col_row_pin) {
+	GPIOC->BSRR = 1U << col_row_pin;
+}
+
+void set_columns_low_state(void) {
+	int pin_index = COL1;
+	while (pin_index <= COL4) {
+		set_low_state(key_pins[pin_index]);
+		pin_index++;
+	}
+}
+
+void set_columns_high_state(void) {
+	int pin_index = COL1;
+	while (pin_index <= COL4) {
+		set_high_state(key_pins[pin_index]);
+		pin_index++;
+	}
+}
+
+
+
 /************************************
 
 TIMER CONFIGURATION AND USAGE
@@ -240,7 +280,7 @@ void set_clock_and_initial_TIM3_registers_values_without_starting(void) {
 	Since 1 microsecond = 0.0001 millisecond and we want to trigger an interruption
 	after 10 ms, we decide that the counter has to count 10000 ticks.
 	*/
-	TIM3->ARR = 10000	// An auto-reload register
+	TIM3->ARR = 10000;	// An auto-reload register
 
 	/*
 	Force an update event in order to use the values loaded into registers
@@ -436,12 +476,6 @@ void configure_gpio_keypad(void) {
 	// IRQ
 }
 
-void set_rows_EXTI_to_zero(void) {
-	// Clear EXTI bits for rows: ports PC6, PC7, PC8, PC9
-	EXTI->PR = 	EXTI_PR_PR6 | EXTI_PR_PR7 |
-				EXTI_PR_PR8 | EXTI_PR_PR9;
-}
-
 void configure_rows_EXTI_NVIC(void) {
 	set_rows_EXTI_to_zero();
 
@@ -484,30 +518,6 @@ void EXTI9_5_IRQHandler(void) {
 	TIM3->CNT = 0;
 
 	start_timer();
-}
-
-void set_low_state(int col_row_pin) {
-	GPIOC->BSRR = 1U << (col_row_pin + BSRR_UPPER_HALF);
-}
-
-void set_high_state(int col_row_pin) {
-	GPIOC->BSRR = 1U << col_row_pin;
-}
-
-void set_columns_low_state(void) {
-	int pin_index = COL1;
-	while (pin_index <= COL4) {
-		set_low_state(key_pins[pin_index]);
-		pin_index++;
-	}
-}
-
-void set_columns_high_state(void) {
-	int pin_index = COL1;
-	while (pin_index <= COL4) {
-		set_high_state(key_pins[pin_index]);
-		pin_index++;
-	}
 }
 
 void configure_clock_rows_cols_interruptions(void) {
