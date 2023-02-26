@@ -512,6 +512,9 @@ void EXTI9_5_IRQHandler(void) {
 		// TODO
 	}
 
+	BlueLEDoff();
+	RedLEDon();
+
 	set_columns_high_state();
 
 	// Set set the register storing current counter value to zero (CNT - counter)
