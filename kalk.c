@@ -135,8 +135,12 @@ USART_CR1_PS)
 
 #define BSRR_UPPER_HALF	16
 
+#define PRESS_TRIES		4
+
 int key_pins[NUM_KEYS*2] = {PIN_COL1, PIN_COL2, PIN_COL3, PIN_COL4,
 							PIN_ROW1, PIN_ROW2, PIN_ROW3, PIN_ROW4};
+
+int times_press_detected;
 
 #define RedLEDon() \
 RED_LED_GPIO->BSRR = 1 << (RED_LED_PIN + 16)
@@ -265,7 +269,15 @@ I 	TIM3->SR 		status register
 	NVIC_EnableIRQ(TIM3_IRQn);
 }
 
-bool is_key_pressed(void) {
+void start_timer(void) {
+	TIM3->CR1 |= TIM_CR1_CEN;
+}
+
+void stop_timer(void) {
+	TIM3->CR1 &= ~TIM_CR1_CEN;
+}
+
+bool check_key_pressed(void) {
 	return false;
 }
 
@@ -275,11 +287,30 @@ void TIM3_IRQHandler(void) {
 	if (it_status & TIM_SR_UIF) {
 		TIM3->SR = ~TIM_SR_UIF;
 		// TODO
-		if (is_key_pressed()) {
+		// Handle the interruption
 
+		// Scan the keypad
+		bool is_key_pressed = check_key_pressed();
+		
+		if (is_key_pressed) {
+			if (times_press_detected < PRESS_TRIES) {
+				// Repeat the cycle several times in order to exclude the contact vibration
+				times_press_detected++;
+			}
+			else {
+				// TODO 
+				// A key is probably REALLY pressed
+				times_press_detected = 0;
+			}
 		}
 		else {
-			// TODO repeat cycle as many times as needed
+			// None of the key is pressed or has been pressed due to the contact vibration
+			times_press_detected = 0;
+			
+			stop_timer();
+			set_columns_low_state();
+			set_rows_EXTI_to_zero();
+			NVIC_EnableIRQ(EXTI9_5_IRQn);
 		}
 	}
 
@@ -289,13 +320,11 @@ void TIM3_IRQHandler(void) {
 	}
 }
 
-void start_timer(void) {
-	TIM3->CR1 |= TIM_CR1_CEN;
-}
+/*
 
-void stop_timer(void) {
-	TIM3->CR1 &= ~TIM_CR1_CEN;
-}
+0 1 2 3 4
+1 2 3 4
+*/
 
 
 
