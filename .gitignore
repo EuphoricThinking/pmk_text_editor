@@ -1,0 +1,6 @@
+delay.o
+gpio.o
+startup_stm32.o
+# .bin file included
+kalk.elf
+kalk.o
