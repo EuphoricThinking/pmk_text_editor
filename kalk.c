@@ -125,12 +125,12 @@ USART_CR1_PS)
 #define COL1 			0
 #define COL2 			1
 #define COL3 			2
-#define COL4 			4
+#define COL4 			3
 
-#define ROW1 			5
-#define ROW2 			6
-#define ROW3 			7
-#define ROW4 			8
+#define ROW1 			4
+#define ROW2 			5
+#define ROW3 			6
+#define ROW4 			7
 
 #define NUM_KEYS		4
 
@@ -219,11 +219,11 @@ void set_rows_EXTI_to_zero(void) {
 }
 
 void set_low_state(int col_row_pin) {
-	GPIOC->BSRR = 1U << (col_row_pin + BSRR_UPPER_HALF);
+	KEYBOARD_GPIO->BSRR = 1U << (col_row_pin + BSRR_UPPER_HALF);
 }
 
 void set_high_state(int col_row_pin) {
-	GPIOC->BSRR = 1U << col_row_pin;
+	KEYBOARD_GPIO->BSRR = 1U << col_row_pin;
 }
 
 void set_columns_low_state(void) {
@@ -242,6 +242,22 @@ void set_columns_high_state(void) {
 	}
 }
 
+bool is_row_pressed(int row_pin) {
+	if ((KEYBOARD_GPIO->IDR >> row_pin) & 1) {
+		BlueLEDoff();
+		GreenLEDoff();
+		RedLEDon();
+
+		return true;
+	}
+	else {
+		RedLEDoff();
+		BlueLEDoff();
+		GreenLEDon();
+
+		return false;
+	}
+}
 
 
 /************************************
@@ -318,7 +334,13 @@ void stop_timer(void) {
 }
 
 bool check_key_pressed(void) {
-	return false;
+	set_low_state(key_pins[COL1]);
+
+	bool pressed = is_row_pressed(key_pins[ROW1]);
+
+	set_high_state(key_pins[COL1]);
+
+	return pressed;
 }
 
 void TIM3_IRQHandler(void) {
@@ -334,6 +356,10 @@ void TIM3_IRQHandler(void) {
 		
 		if (is_key_pressed) {
 			if (times_press_detected < PRESS_TRIES) {
+				// TODO test
+				// BlueLEDoff();
+				// GreenLEDoff();
+				// RedLEDon();
 				// Repeat the cycle several times in order to exclude the contact vibration
 				times_press_detected++;
 			}
@@ -346,8 +372,9 @@ void TIM3_IRQHandler(void) {
 		else {
 			// None of the key is pressed or has been pressed due to the contact vibration
 			
-			BlueLEDoff();
-			GreenLEDon();
+			// BlueLEDoff();
+			// RedLEDoff();
+			// GreenLEDon();
 			
 			times_press_detected = 0;
 			
