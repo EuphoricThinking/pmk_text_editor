@@ -509,6 +509,9 @@ void contact_vibration_cleanup(void) {
 	NVIC_EnableIRQ(EXTI9_5_IRQn);
 }
 
+int line;
+int letter_pos = 1;
+
 void TIM3_IRQHandler(void) {
 	uint32_t it_status = TIM3->SR & TIM3->DIER;
 
@@ -516,6 +519,11 @@ void TIM3_IRQHandler(void) {
 		TIM3->SR = ~TIM_SR_UIF;
 		// TODO
 		// Handle the interruption
+		// BlueLEDoff();
+		// RedLEDoff();
+		// GreenLEDoff();
+		// Green2LEDoff();
+		// RedLEDon();
 
 		// Scan the keypad
 		int pressed_key_id = check_key_pressed_return_key_id();
@@ -535,6 +543,30 @@ void TIM3_IRQHandler(void) {
 				//push(calculate_key_index(row_id, col_id));
 				push(pressed_key_id);
 
+				LCDputcharWrap('B');
+				letter_pos++;
+
+				if (letter_pos == 9) {
+					line++;
+					letter_pos = 0;
+				}
+
+				if (letter_pos == 4 && line == 0) {
+					LCDgoto(line, 0);
+					LCDputchar('C');
+					LCDgoto(line, 4);
+					LCDputchar('E');
+					letter_pos = 5;
+				}
+
+				if (letter_pos == 5 && line == 2) {
+					LCDgoto(0, 2);
+					LCDputcharWrap('D');
+					LCDgoto(2, 5);
+					LCDputchar(' ');
+					letter_pos = 6;
+				}
+
 				//times_press_detected = 0;
 				contact_vibration_cleanup();
 			}
@@ -545,7 +577,8 @@ void TIM3_IRQHandler(void) {
 			// BlueLEDoff();
 			// RedLEDoff();
 			// GreenLEDon();
-			LCDclear();
+			// int check = SystemCoreClock;
+
 			
 			contact_vibration_cleanup();
 			// times_press_detected = 0;
@@ -560,6 +593,11 @@ void TIM3_IRQHandler(void) {
 	if (it_status & TIM_SR_CC1IF) {
 		TIM3->SR = ~TIM_SR_CC1IF;
 		// TODO
+		// BlueLEDoff();
+		// RedLEDoff();
+		// GreenLEDoff();
+		// Green2LEDoff();
+		// GreenLEDon();
 	}
 }
 
