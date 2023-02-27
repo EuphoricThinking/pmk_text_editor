@@ -147,7 +147,7 @@ USART_CR1_PS)
 #define NUM_NORMAL		8
 
 #define KEY_LEN_SPECIAL	2
-#define NUM_SPECIAL		3
+#define NUM_SPECIAL		4
 
 // Action keys codes
 #define SPACE 			3
@@ -545,6 +545,7 @@ void TIM3_IRQHandler(void) {
 			// BlueLEDoff();
 			// RedLEDoff();
 			// GreenLEDon();
+			LCDclear();
 			
 			contact_vibration_cleanup();
 			// times_press_detected = 0;
