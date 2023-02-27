@@ -516,11 +516,11 @@ I 	TIM3->SR 		status register
 	NVIC_EnableIRQ(TIM3_IRQn);
 }
 
-void start_timer(void) {
+void start_bounce_timer_TIM3(void) {
 	TIM3->CR1 |= TIM_CR1_CEN;
 }
 
-void stop_timer(void) {
+void stop_bounce_timer_TIM3(void) {
 	TIM3->CR1 &= ~TIM_CR1_CEN;
 }
 
@@ -587,7 +587,7 @@ int check_key_pressed_return_key_id(void) {
 void contact_vibration_cleanup(void) {
 	times_press_detected = 0;
 			
-	stop_timer();
+	stop_bounce_timer_TIM3();
 	set_columns_low_state();
 	set_rows_EXTI_to_zero();
 	NVIC_EnableIRQ(EXTI9_5_IRQn);
@@ -664,7 +664,7 @@ void TIM3_IRQHandler(void) {
 			contact_vibration_cleanup();
 			// times_press_detected = 0;
 			
-			// stop_timer();
+			// stop_bounce_timer_TIM3();
 			// set_columns_low_state();
 			// set_rows_EXTI_to_zero();
 			// NVIC_EnableIRQ(EXTI9_5_IRQn);
@@ -842,7 +842,7 @@ void EXTI9_5_IRQHandler(void) {
 	// Set set the register storing current counter value to zero (CNT - counter)
 	TIM3->CNT = 0;
 
-	start_timer();
+	start_bounce_timer_TIM3();
 }
 
 void configure_clock_rows_cols_interruptions(void) {
