@@ -1,8 +1,5 @@
-delay.o
-gpio.o
-startup_stm32.o
+*.o
 # .bin file included
 kalk.elf
-kalk.o
-fonts.o
-lcd.o
+a.out
+try_struct.c

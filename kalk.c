@@ -143,10 +143,12 @@ USART_CR1_PS)
 
 #define NOT_PRESSED		-1
 
-typedef struct rowcol {
-	int row_id;
-	int col_id;
-} rowcol;
+#define MAX_KEY_LEN;
+
+typedef struct key_data {
+	int len;
+	int signs[MAX_KEY_LEN];
+} key_data;
 
 int key_pins[NUM_KEYS*2] = {PIN_COL1, PIN_COL2, PIN_COL3, PIN_COL4,
 							PIN_ROW1, PIN_ROW2, PIN_ROW3, PIN_ROW4};
@@ -804,6 +806,8 @@ int main() {
 	configure();
 	// initialize_mess_length();
 	BlueLEDon();
+	// LCDclear();
+	LCDputchar('A');
 
 	// if ((KEYBOARD_GPIO->IDR >> PIN_ROW1) & 1) {
 	// 	BlueLEDoff();
