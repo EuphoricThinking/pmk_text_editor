@@ -171,14 +171,6 @@ USART_CR1_PS)
 #define COL_ROLLBACK	9 	// Newline needed: increment text_line, set posiotn to 0
 #define ROW_ROLLBACK	5	// Needs to clear the screen
 
-typedef struct key_data_normal {
-	char signs[KEY_LEN_NORMAL];
-} key_data_normal;
-
-typedef struct key_data_special {
-	char signs[KEY_LEN_SPECIAL];
-} key_data_special;
-
 typedef struct event {
 	int code;
 	int line;
@@ -200,15 +192,15 @@ code	meaning		index in normal_keys
 9		TUV8		6
 10 		WXY9		7
 */
-key_data_normal normal_keys[NUM_NORMAL] = {
-									{{'A', 'B', 'C', '2'}},
-									{{'D', 'E', 'F', '3'}},
-									{{'G', 'H', 'I', '4'}},
-									{{'J', 'K', 'L', '5'}},
-									{{'M', 'N', 'O', '6'}},
-									{{'P', 'R', 'S', '7'}},
-									{{'T', 'U', 'V', '8'}},
-									{{'W', 'X', 'Y', '9'}}
+char normal_keys[NUM_NORMAL][KEY_LEN_NORMAL] = {
+									{'A', 'B', 'C', '2'},
+									{'D', 'E', 'F', '3'},
+									{'G', 'H', 'I', '4'},
+									{'J', 'K', 'L', '5'},
+									{'M', 'N', 'O', '6'},
+									{'P', 'R', 'S', '7'},
+									{'T', 'U', 'V', '8'},
+									{'W', 'X', 'Y', '9'}
 									};
 
 /*
@@ -218,11 +210,11 @@ code	meaning		index in special_keys
 13		0 Z			2
 14		# Q			3
 */
-key_data_special special_keys[NUM_SPECIAL] = {
-									{{'1', '<'}},
-									{{'*', ':'}},
-									{{'0', 'Z'}},
-									{{'#', 'Q'}}
+char special_keys[NUM_SPECIAL][KEY_LEN_SPECIAL] = {
+									{'1', '<'},
+									{'*', ':'},
+									{'0', 'Z'},
+									{'#', 'Q'}
 									};
 
 
