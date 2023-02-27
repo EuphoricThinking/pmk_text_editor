@@ -142,6 +142,11 @@ USART_CR1_PS)
 
 #define NOT_PRESSED		-1
 
+typedef struct rowcol {
+	int row_id;
+	int col_id;
+} rowcol;
+
 int key_pins[NUM_KEYS*2] = {PIN_COL1, PIN_COL2, PIN_COL3, PIN_COL4,
 							PIN_ROW1, PIN_ROW2, PIN_ROW3, PIN_ROW4};
 
@@ -209,6 +214,47 @@ int check_single_state(int id) {
 	}
 }
 
+/****************
+
+QUEUE
+
+*****************/
+int empty_queue(void) {
+	return head == tail;
+}
+
+int pop(void) {
+	if (head == LIMIT_MESS_QUEUED || head == tail) {
+		return -1;
+	}
+
+	int id = queued_mess_id[head++];
+
+	return id;
+}
+
+void push(int id) {
+	if (tail != LIMIT_MESS_QUEUED) {
+		queued_mess_id[tail++] = id;
+	}
+	else if (head == tail) {
+		head = 0;
+		tail = 0;
+		queued_mess_id[tail++] = id;
+	}
+}
+
+int peek(void) {
+	if (head == tail) {
+		return -1;
+	}
+	else {
+		return queued_mess_id[head];
+	}
+}
+
+
+
 /******************
 
 KEYPAD STATES AND REGISTERS
@@ -251,6 +297,10 @@ bool is_row_pressed(int row_pin) {
 	else {
 		return false;
 	}
+}
+
+int calculate_key_index(int row_id, int col_id) {
+	return NUM_KEYS*(row_id - ROW1) + col_id;
 }
 
 
@@ -327,7 +377,7 @@ void stop_timer(void) {
 	TIM3->CR1 &= ~TIM_CR1_CEN;
 }
 
-int check_key_pressed_return_row_col(void) {
+bool check_key_pressed(void) {
 	// set_low_state(0);
 
 	BlueLEDoff();
@@ -335,6 +385,7 @@ int check_key_pressed_return_row_col(void) {
 	GreenLEDoff();
 	Green2LEDoff();
 
+	bool pressed = false;
 	for (int col_id = COL1; col_id <= COL4; col_id++) {
 
 		set_low_state(key_pins[col_id]);
@@ -356,7 +407,9 @@ int check_key_pressed_return_row_col(void) {
 					Green2LEDon();
 				}
 
-				return row_id;
+				pressed = true;
+
+				push(calculate_key_index(row_id, col_id));
 			}
 		}
 
@@ -377,7 +430,7 @@ int check_key_pressed_return_row_col(void) {
 
 	// set_high_state(0);
 
-	return NOT_PRESSED;
+	return pressed;
 }
 
 void TIM3_IRQHandler(void) {
@@ -389,9 +442,9 @@ void TIM3_IRQHandler(void) {
 		// Handle the interruption
 
 		// Scan the keypad
-		int is_key_pressed = check_key_pressed_return_row_col();
+		bool is_key_pressed = check_key_pressed();
 		
-		if (is_key_pressed != NOT_PRESSED) {
+		if (is_key_pressed) {
 			if (times_press_detected < PRESS_TRIES) {
 				// TODO test
 				// BlueLEDoff();
@@ -684,39 +737,6 @@ void initialize_send_DMA(char* mess, int len) {
 	DMA1_Stream6->CR |= DMA_SxCR_EN;
 }
 
-int empty_queue(void) {
-	return head == tail;
-}
-
-int pop(void) {
-	if (head == LIMIT_MESS_QUEUED || head == tail) {
-		return -1;
-	}
-
-	int id = queued_mess_id[head++];
-
-	return id;
-}
-
-void push(int id) {
-	if (tail != LIMIT_MESS_QUEUED) {
-		queued_mess_id[tail++] = id;
-	}
-	else if (head == tail) {
-		head = 0;
-		tail = 0;
-		queued_mess_id[tail++] = id;
-	}
-}
-
-int peek(void) {
-	if (head == tail) {
-		return -1;
-	}
-	else {
-		return queued_mess_id[head];
-	}
-}
 
 // DMA
 void queue_to_send(int message_index) {
