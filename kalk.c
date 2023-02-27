@@ -303,6 +303,14 @@ int calculate_key_index(int row_id, int col_id) {
 	return NUM_KEYS*(row_id - ROW1) + col_id;
 }
 
+// rowcol rowcol_init(int row_number, int col_number) {
+// 	rowcol result;
+// 	result.row_id = row_number;
+// 	result.col_id = col_number;
+
+// 	return result;
+// }
+
 
 /************************************
 
@@ -377,7 +385,7 @@ void stop_timer(void) {
 	TIM3->CR1 &= ~TIM_CR1_CEN;
 }
 
-bool check_key_pressed(void) {
+int check_key_pressed_return_key_id(void) {
 	// set_low_state(0);
 
 	BlueLEDoff();
@@ -385,7 +393,7 @@ bool check_key_pressed(void) {
 	GreenLEDoff();
 	Green2LEDoff();
 
-	bool pressed = false;
+	//bool pressed = false;
 	for (int col_id = COL1; col_id <= COL4; col_id++) {
 
 		set_low_state(key_pins[col_id]);
@@ -407,9 +415,11 @@ bool check_key_pressed(void) {
 					Green2LEDon();
 				}
 
-				pressed = true;
+				// return rowcol_init(row_id, col_id);
+				return calculate_key_index(row_id, col_id);
+				// pressed = true;
 
-				push(calculate_key_index(row_id, col_id));
+				// push(calculate_key_index(row_id, col_id));
 			}
 		}
 
@@ -430,7 +440,18 @@ bool check_key_pressed(void) {
 
 	// set_high_state(0);
 
-	return pressed;
+	//return pressed;
+	//return rowcol_init(NOT_PRESSED, NOT_PRESSED);
+	return NOT_PRESSED;
+}
+
+void contact_vibration_cleanup(void) {
+	times_press_detected = 0;
+			
+	stop_timer();
+	set_columns_low_state();
+	set_rows_EXTI_to_zero();
+	NVIC_EnableIRQ(EXTI9_5_IRQn);
 }
 
 void TIM3_IRQHandler(void) {
@@ -442,9 +463,9 @@ void TIM3_IRQHandler(void) {
 		// Handle the interruption
 
 		// Scan the keypad
-		bool is_key_pressed = check_key_pressed();
+		int pressed_key_id = check_key_pressed_return_key_id();
 		
-		if (is_key_pressed) {
+		if (pressed_key_id != NOT_PRESSED) {
 			if (times_press_detected < PRESS_TRIES) {
 				// TODO test
 				// BlueLEDoff();
@@ -456,7 +477,11 @@ void TIM3_IRQHandler(void) {
 			else {
 				// TODO 
 				// A key is probably REALLY pressed
-				times_press_detected = 0;
+				//push(calculate_key_index(row_id, col_id));
+				push(pressed_key_id);
+
+				//times_press_detected = 0;
+				contact_vibration_cleanup();
 			}
 		}
 		else {
@@ -466,12 +491,13 @@ void TIM3_IRQHandler(void) {
 			// RedLEDoff();
 			// GreenLEDon();
 			
-			times_press_detected = 0;
+			contact_vibration_cleanup();
+			// times_press_detected = 0;
 			
-			stop_timer();
-			set_columns_low_state();
-			set_rows_EXTI_to_zero();
-			NVIC_EnableIRQ(EXTI9_5_IRQn);
+			// stop_timer();
+			// set_columns_low_state();
+			// set_rows_EXTI_to_zero();
+			// NVIC_EnableIRQ(EXTI9_5_IRQn);
 		}
 	}
 
