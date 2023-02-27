@@ -474,7 +474,7 @@ void set_clock_and_initial_TIM3_registers_values_without_starting(void) {
 
 	/* 
 	The default frequency is 16 MHz. Changing the prescaler value turns
-	an 80 MHz clock into a 1 MHz clock, which ticks once per 1 microsecond.
+	an 16 MHz clock into a 1 MHz clock, which ticks once per 1 microsecond.
 
 	-1 results from the formula for decreasing the frequency of the counter update:
 	CLOCK_COUNTER3 = CLOCK_TIMER3 / (TIMER3->PSC + 1)
@@ -523,6 +523,72 @@ void start_bounce_timer_TIM3(void) {
 void stop_bounce_timer_TIM3(void) {
 	TIM3->CR1 &= ~TIM_CR1_CEN;
 }
+
+
+/**********************
+
+Configure TIM2 for external interuptions measurements
+
+**********************/
+
+void set_clock_and_initial_TIM2_registers_values_without_starting(void) {
+	RCC->APB1ENR |= RCC_APB1ENR_TIM2EN;
+
+	TIM2->CR1 = TIM_COUNTERMODE_UP;	// A control register
+
+	/* 
+	The default frequency is 16 MHz. Changing the prescaler value turns
+	an 16 MHz clock into a 0.001 MHz clock, which ticks once per 1 millisecond.
+	*/
+	TIM2->PSC = 16000 - 1; // A prescaler
+
+	/*
+	Enable as long counting as possible; the register size is not known
+	(slides indicate 16- or 32-bit). Therefore the timer will measure on its own
+	for at least one minute.
+	*/
+	TIM2->ARR = ~(TIM2->ARR & 0);	// An auto-reload register
+
+	/*
+	Force an update event in order to use the values loaded into registers
+	from the first cycle.
+	*/
+	TIM2->EGR = TIM_EGR_UG;
+}
+
+void enable_interruptions_TIM2(void) {
+	TIM2->SR = ~(TIM_SR_UIF | TIM_SR_CC1IF);
+	TIM2->DIER = TIM_DIER_UIE | TIM_DIER_CC1IE;
+
+	// Enable interruptions on NVIC level
+	NVIC_EnableIRQ(TIM2_IRQn);
+}
+
+void start_interval_timer_TIM2(void) {
+	TIM2->CR1 |= TIM_CR1_CEN;
+}
+
+void stop_interval_timer_TIM2(void) {
+	TIM2->CR1 &= ~TIM_CR1_CEN;
+}
+
+void TIM2_IRQHandler(void) {
+	uint32_t it_status = TIM2->SR & TIM2->DIER;
+
+	if (it_status & TIM_SR_UIF) {
+		TIM2->SR = ~TIM_SR_UIF;
+
+		stop_interval_timer_TIM2();
+		TIM2->CNT = 0;
+	}
+	if (it_status & TIM_SR_CC1IF) {
+		TIM2->SR = ~TIM_SR_CC1IF;
+	}
+}
+
+
+
+
 
 int check_key_pressed_return_key_id(void) {
 	// set_low_state(0);
