@@ -431,18 +431,23 @@ event prepare_event_update_letter_modulo(int key_id) {
 	event result;
 
 	if (key_id%NUM_KEYS == ACTION_COL) {
-		result = {ACTION_MODE, text_line, letter_pos, '?'};
+		result = (event) { .code = ACTION_MODE, .line = text_line, 
+			.pos = letter_pos, .letter = '?'};
 	}
 	else if (key_id == SINGLE_SPECIAL || key_id/NUM_KEYS == SPECIAL_ROW) {
 		letter_modulo %= KEY_LEN_SPECIAL;
-		result = {SPECIAL_MODE, text_line, letter_pos, 
-				special_keys[get_special_key_index(key_id)][letter_modulo]};
+		result = (event) { .code = SPECIAL_MODE, .line = text_line, 
+			.pos = letter_pos, 
+			.letter = special_keys[get_special_key_index(key_id)][letter_modulo]};
 	}
 	else {
 		letter_modulo %= KEY_LEN_NORMAL;
-		result = {NORMAL_MODE, text_line, letter_pos,
-				normal_keys[get_normal_key_index(key_id)][letter_modulo]}
+		result = (event) { .code = NORMAL_MODE, .line = text_line, 
+			.pos = letter_pos,
+			.letter = normal_keys[get_normal_key_index(key_id)][letter_modulo]};
 	}
+
+	return result;
 }
 // rowcol rowcol_init(int row_number, int col_number) {
 // 	rowcol result;
