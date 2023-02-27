@@ -143,15 +143,40 @@ USART_CR1_PS)
 
 #define NOT_PRESSED		-1
 
-#define MAX_KEY_LEN;
+#define KEY_LEN_NORMAL	4
+#define NUM_NORMAL		8
 
-typedef struct key_data {
-	int len;
-	int signs[MAX_KEY_LEN];
-} key_data;
+#define KEY_LEN_SPECIAL	2
+#define NUM_SPECIAL
+
+typedef struct key_data_normal {
+	char signs[KEY_LEN_NORMAL];
+} key_data_normal;
+
+typedef struct key_data_special {
+	char signs[KEY_LEN_SPECIAL];
+} key_data_special;
+
 
 int key_pins[NUM_KEYS*2] = {PIN_COL1, PIN_COL2, PIN_COL3, PIN_COL4,
 							PIN_ROW1, PIN_ROW2, PIN_ROW3, PIN_ROW4};
+
+/*
+code	meaning		index in normal_keys
+1		ABC2		0
+2		DEF3		1
+4		GHI4		2
+5		JKL5		3
+6		MNO6		4
+8		PRS7		5
+9		TUV8		6
+10 		WXY9		7
+*/
+key_data_normal normal_keys[NUM_NORMAL] = {
+									{{'A', 'B', 'C', '2'}},
+									{{'D', 'E', 'F', '3'}},
+									{}		
+									};
 
 int times_press_detected;
 
