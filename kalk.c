@@ -3,6 +3,7 @@
 #include <delay.h>
 #include <string.h>
 #include <stdbool.h>
+#include <lcd.h>
 
 // URUCHOM RUN /opt/arm/stm32/ocd/qfn4 
 
@@ -217,6 +218,8 @@ int check_single_state(int id) {
 /****************
 
 QUEUE
+
+add mutexes
 
 *****************/
 int empty_queue(void) {
@@ -744,6 +747,7 @@ void dma_configuration(void) {
 void configure(void) {
 	configure_clock_rows_cols_interruptions();
 	configure_clock_gpio_leds();
+	LCDconfigure();
 
 	// Clock needs some time to be turned on // taktowanie
 	__NOP();
