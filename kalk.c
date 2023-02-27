@@ -219,11 +219,11 @@ void set_rows_EXTI_to_zero(void) {
 }
 
 void set_low_state(int col_row_pin) {
-	KEYBOARD_GPIO->BSRR = 1U << (col_row_pin + BSRR_UPPER_HALF);
+	KEYBOARD_GPIO->BSRR = 1 << (col_row_pin + BSRR_UPPER_HALF);
 }
 
 void set_high_state(int col_row_pin) {
-	KEYBOARD_GPIO->BSRR = 1U << col_row_pin;
+	KEYBOARD_GPIO->BSRR = 1 << col_row_pin;
 }
 
 void set_columns_low_state(void) {
@@ -334,13 +334,148 @@ void stop_timer(void) {
 }
 
 bool check_key_pressed(void) {
-	set_low_state(key_pins[COL1]);
+	set_low_state(0);
 
-	bool pressed = is_row_pressed(key_pins[ROW1]);
+	BlueLEDoff();
+	RedLEDoff();
+	GreenLEDoff();
 
-	set_high_state(key_pins[COL1]);
+	if (!((KEYBOARD_GPIO->IDR >> PIN_ROW1) & 1)) {
+		RedLEDon();
+	}
 
-	return pressed;
+	if (!((KEYBOARD_GPIO->IDR >> PIN_ROW2) & 1)) {
+		BlueLEDon();
+	}
+
+	if (!((KEYBOARD_GPIO->IDR >> PIN_ROW3) & 1)) {
+		GreenLEDon();
+	}
+
+	set_high_state(0);
+
+	return false;
+}
+
+bool check_key_pressed_debug(void) {
+	// set_low_state(key_pins[COL1]);
+
+	// bool pressed = is_row_pressed(key_pins[ROW1]);
+
+	// set_high_state(key_pins[COL1]);
+
+	// return pressed;
+	set_low_state(0);
+
+//	if ((KEYBOARD_GPIO->IDR >> 6) & 1) {
+	// if (!(KEYBOARD_GPIO->IDR >> PIN_ROW3) & 1) {
+	// 	BlueLEDoff();
+	// 	GreenLEDoff();
+	// 	RedLEDon();
+	// 	return false;
+	// }
+	// else {
+	// 	BlueLEDoff();
+	// 	GreenLEDoff();
+	// 	RedLEDoff();
+	// }
+
+	// if (!(KEYBOARD_GPIO->IDR >> PIN_ROW2) & 1) {
+	// 	BlueLEDoff();
+	// 	RedLEDoff();
+	// 	GreenLEDoff();
+	// 	GreenLEDon();
+	// 	return false;
+	// }
+	// else {
+	// 	BlueLEDoff();
+	// 	GreenLEDoff();
+	// 	RedLEDoff();
+
+	// }
+
+	// if (!(KEYBOARD_GPIO->IDR >> PIN_ROW1) & 1) {
+	// 	BlueLEDoff();
+	// 	RedLEDoff();
+	// 	GreenLEDoff();
+	// 	BlueLEDon();
+	// 	return false;
+	// 	// GreenLEDon();
+	// }
+	// else {
+	// 	BlueLEDoff();
+	// 	GreenLEDoff();
+	// 	RedLEDoff();
+	// 	// RedLEDon();
+
+	// }
+	// BlueLEDoff();
+	// GreenLEDoff();
+	// RedLEDoff();
+
+
+
+	// int i = ROW1;
+	// //bool found = false;
+	// while (i <= ROW4) {
+	// 	if (!(KEYBOARD_GPIO->IDR >> key_pins[i]) & 1) {
+	// 		BlueLEDoff();
+	// 		RedLEDoff();
+	// 		GreenLEDoff();
+	// 		RedLEDon();
+	// 		//found = true;
+	// 		i++;
+	// 		//return false;
+	// 	}
+	// }
+
+
+
+	// if (!found) {
+	// 	BlueLEDoff();
+	// 	RedLEDoff();
+	// 	GreenLEDoff();
+	// }
+
+
+	BlueLEDoff();
+		RedLEDoff();
+		GreenLEDoff();
+
+	if (!(KEYBOARD_GPIO->IDR >> PIN_ROW3) & 1) {
+		BlueLEDoff();
+		RedLEDoff();
+		GreenLEDoff();
+		BlueLEDon();
+		//return false;
+	}
+	else if (!(KEYBOARD_GPIO->IDR >> PIN_ROW2) & 1) {
+		BlueLEDoff();
+		RedLEDoff();
+		GreenLEDoff();
+		GreenLEDon();
+		// return false;
+	}
+	else if (!(KEYBOARD_GPIO->IDR >> PIN_ROW1) & 1) {
+		BlueLEDoff();
+		RedLEDoff();
+		GreenLEDoff();
+		//BlueLEDon();
+		// return false;
+		// GreenLEDon();
+	}
+
+
+	// else {
+	// 	BlueLEDoff();
+	// 	GreenLEDoff();
+	// 	RedLEDoff();
+	// 	// RedLEDon();
+	// }
+
+	set_high_state(0);
+
+	return false;
 }
 
 void TIM3_IRQHandler(void) {
@@ -717,6 +852,20 @@ int main() {
 	configure();
 	// initialize_mess_length();
 	BlueLEDon();
+
+	// if ((KEYBOARD_GPIO->IDR >> PIN_ROW1) & 1) {
+	// 	BlueLEDoff();
+	// 	GreenLEDoff();
+	// 	RedLEDon();
+
+	// }
+	// else {
+	// 	RedLEDoff();
+	// 	BlueLEDoff();
+	// 	GreenLEDon();
+
+	// }
+
 
 	while (1) {
 	}
