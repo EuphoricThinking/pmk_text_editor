@@ -140,6 +140,8 @@ USART_CR1_PS)
 
 #define TIM_COUNTERMODE_UP	0
 
+#define NOT_PRESSED		-1
+
 int key_pins[NUM_KEYS*2] = {PIN_COL1, PIN_COL2, PIN_COL3, PIN_COL4,
 							PIN_ROW1, PIN_ROW2, PIN_ROW3, PIN_ROW4};
 
@@ -243,18 +245,10 @@ void set_columns_high_state(void) {
 }
 
 bool is_row_pressed(int row_pin) {
-	if ((KEYBOARD_GPIO->IDR >> row_pin) & 1) {
-		BlueLEDoff();
-		GreenLEDoff();
-		RedLEDon();
-
+	if (!((KEYBOARD_GPIO->IDR >> row_pin) & 1)) {
 		return true;
 	}
 	else {
-		RedLEDoff();
-		BlueLEDoff();
-		GreenLEDon();
-
 		return false;
 	}
 }
@@ -333,149 +327,57 @@ void stop_timer(void) {
 	TIM3->CR1 &= ~TIM_CR1_CEN;
 }
 
-bool check_key_pressed(void) {
-	set_low_state(0);
+int check_key_pressed_return_row_col(void) {
+	// set_low_state(0);
 
 	BlueLEDoff();
 	RedLEDoff();
 	GreenLEDoff();
+	Green2LEDoff();
 
-	if (!((KEYBOARD_GPIO->IDR >> PIN_ROW1) & 1)) {
-		RedLEDon();
+	for (int col_id = COL1; col_id <= COL4; col_id++) {
+
+		set_low_state(key_pins[col_id]);
+
+		for (int row_id = ROW1; row_id <= ROW4; row_id++) {
+			bool is_pressed = is_row_pressed(key_pins[row_id]);
+
+			if (is_pressed) {
+				if (row_id == ROW1) {
+					RedLEDon();
+				}
+				else if (row_id == ROW2) {
+					BlueLEDon();
+				}
+				else if (row_id == ROW3) {
+					GreenLEDon();
+				}
+				else {
+					Green2LEDon();
+				}
+
+				return row_id;
+			}
+		}
+
+		set_high_state(key_pins[col_id]);
 	}
 
-	if (!((KEYBOARD_GPIO->IDR >> PIN_ROW2) & 1)) {
-		BlueLEDon();
-	}
-
-	if (!((KEYBOARD_GPIO->IDR >> PIN_ROW3) & 1)) {
-		GreenLEDon();
-	}
-
-	set_high_state(0);
-
-	return false;
-}
-
-bool check_key_pressed_debug(void) {
-	// set_low_state(key_pins[COL1]);
-
-	// bool pressed = is_row_pressed(key_pins[ROW1]);
-
-	// set_high_state(key_pins[COL1]);
-
-	// return pressed;
-	set_low_state(0);
-
-//	if ((KEYBOARD_GPIO->IDR >> 6) & 1) {
-	// if (!(KEYBOARD_GPIO->IDR >> PIN_ROW3) & 1) {
-	// 	BlueLEDoff();
-	// 	GreenLEDoff();
+	// if (!((KEYBOARD_GPIO->IDR >> PIN_ROW1) & 1)) {
 	// 	RedLEDon();
-	// 	return false;
-	// }
-	// else {
-	// 	BlueLEDoff();
-	// 	GreenLEDoff();
-	// 	RedLEDoff();
 	// }
 
-	// if (!(KEYBOARD_GPIO->IDR >> PIN_ROW2) & 1) {
-	// 	BlueLEDoff();
-	// 	RedLEDoff();
-	// 	GreenLEDoff();
-	// 	GreenLEDon();
-	// 	return false;
-	// }
-	// else {
-	// 	BlueLEDoff();
-	// 	GreenLEDoff();
-	// 	RedLEDoff();
-
-	// }
-
-	// if (!(KEYBOARD_GPIO->IDR >> PIN_ROW1) & 1) {
-	// 	BlueLEDoff();
-	// 	RedLEDoff();
-	// 	GreenLEDoff();
+	// if (!((KEYBOARD_GPIO->IDR >> PIN_ROW2) & 1)) {
 	// 	BlueLEDon();
-	// 	return false;
-	// 	// GreenLEDon();
-	// }
-	// else {
-	// 	BlueLEDoff();
-	// 	GreenLEDoff();
-	// 	RedLEDoff();
-	// 	// RedLEDon();
-
-	// }
-	// BlueLEDoff();
-	// GreenLEDoff();
-	// RedLEDoff();
-
-
-
-	// int i = ROW1;
-	// //bool found = false;
-	// while (i <= ROW4) {
-	// 	if (!(KEYBOARD_GPIO->IDR >> key_pins[i]) & 1) {
-	// 		BlueLEDoff();
-	// 		RedLEDoff();
-	// 		GreenLEDoff();
-	// 		RedLEDon();
-	// 		//found = true;
-	// 		i++;
-	// 		//return false;
-	// 	}
 	// }
 
-
-
-	// if (!found) {
-	// 	BlueLEDoff();
-	// 	RedLEDoff();
-	// 	GreenLEDoff();
+	// if (!((KEYBOARD_GPIO->IDR >> PIN_ROW3) & 1)) {
+	// 	GreenLEDon();
 	// }
 
+	// set_high_state(0);
 
-	BlueLEDoff();
-		RedLEDoff();
-		GreenLEDoff();
-
-	if (!(KEYBOARD_GPIO->IDR >> PIN_ROW3) & 1) {
-		BlueLEDoff();
-		RedLEDoff();
-		GreenLEDoff();
-		BlueLEDon();
-		//return false;
-	}
-	else if (!(KEYBOARD_GPIO->IDR >> PIN_ROW2) & 1) {
-		BlueLEDoff();
-		RedLEDoff();
-		GreenLEDoff();
-		GreenLEDon();
-		// return false;
-	}
-	else if (!(KEYBOARD_GPIO->IDR >> PIN_ROW1) & 1) {
-		BlueLEDoff();
-		RedLEDoff();
-		GreenLEDoff();
-		//BlueLEDon();
-		// return false;
-		// GreenLEDon();
-	}
-
-
-	// else {
-	// 	BlueLEDoff();
-	// 	GreenLEDoff();
-	// 	RedLEDoff();
-	// 	// RedLEDon();
-	// }
-
-	set_high_state(0);
-
-	return false;
+	return NOT_PRESSED;
 }
 
 void TIM3_IRQHandler(void) {
@@ -487,9 +389,9 @@ void TIM3_IRQHandler(void) {
 		// Handle the interruption
 
 		// Scan the keypad
-		bool is_key_pressed = check_key_pressed();
+		int is_key_pressed = check_key_pressed_return_row_col();
 		
-		if (is_key_pressed) {
+		if (is_key_pressed != NOT_PRESSED) {
 			if (times_press_detected < PRESS_TRIES) {
 				// TODO test
 				// BlueLEDoff();
