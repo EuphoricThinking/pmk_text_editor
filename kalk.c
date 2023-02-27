@@ -13,7 +13,7 @@
 #define COMMAND_LEN 3
 #define ERR -1
 #define MESS_NUM 14
-#define LIMIT_MESS_QUEUED 100
+#define LIMIT_QUEUED 100
 
 // buttons
 #define USER_BTN_GPIO GPIOC
@@ -246,10 +246,14 @@ char* messages[MESS_NUM] = {"USER PRESSED\r\n", "USER RELEASED\r\n", "LEFT PRESS
 
 int mess_length[MESS_NUM];
 
-int queued_mess_id[LIMIT_MESS_QUEUED];
+int queued_mess_id[LIMIT_QUEUED];
+
+event queue_events[LIMIT_QUEUED];
 
 int head;
 int tail;
+
+event empty_event = {-1, -1, '?'};
 
 void initialize_mess_length(void) {
 	for (int i = 0; i < MESS_NUM; i++) {
@@ -284,38 +288,56 @@ QUEUE
 
 add mutexes
 
+Yes you can use it directly in the expression you pass as argument.
+
+A statement like
+
+fix_up(pQueue->heap, pQueue->size++);
+is somewhat equivalent to
+
+{
+    int old_value = pQueue->size;
+    pQueue->size = pQueue->size + 1;
+    fix_up(pQueue->heap, old_value);
+}
+
 *****************/
-int empty_queue(void) {
+
+/*
+Thread safety analysis will be provided by the author during the appointment
+because it seems to be a lenghty explanation.
+*/
+bool empty_queue(void) {
 	return head == tail;
 }
 
-int pop(void) {
-	if (head == LIMIT_MESS_QUEUED || head == tail) {
-		return -1;
+event pop(void) {
+	if (head == LIMIT_QUEUED || head == tail) {
+		return empty_event;
 	}
 
-	int id = queued_mess_id[head++];
+	event id = queue_events[head++];
 
 	return id;
 }
 
-void push(int id) {
-	if (tail != LIMIT_MESS_QUEUED) {
-		queued_mess_id[tail++] = id;
+void push(event id) {
+	if (tail != LIMIT_QUEUED) {
+		queue_events[tail++] = id;
 	}
 	else if (head == tail) {
 		head = 0;
 		tail = 0;
-		queued_mess_id[tail++] = id;
+		queue_events[tail++] = id;
 	}
 }
 
-int peek(void) {
+event peek(void) {
 	if (head == tail) {
-		return -1;
+		return empty_event;
 	}
 	else {
-		return queued_mess_id[head];
+		return queue_events[head];
 	}
 }
 
