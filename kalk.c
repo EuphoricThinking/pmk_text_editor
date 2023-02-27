@@ -149,6 +149,8 @@ USART_CR1_PS)
 #define KEY_LEN_SPECIAL	2
 #define NUM_SPECIAL		4
 
+#define UPGRADE_TRESHOLD	600 	// Minimal value of millisecond to upgrade the letter
+
 // Action keys codes
 #define SPACE 			3
 #define NEWLINE			7
