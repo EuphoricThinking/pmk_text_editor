@@ -149,6 +149,12 @@ USART_CR1_PS)
 #define KEY_LEN_SPECIAL	2
 #define NUM_SPECIAL		3
 
+// Action keys codes
+#define SPACE 			3
+#define UPGRADE			7
+#define CLEAR_ONCE		11
+#define DELETE_ALL		15
+
 typedef struct key_data_normal {
 	char signs[KEY_LEN_NORMAL];
 } key_data_normal;
