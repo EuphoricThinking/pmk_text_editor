@@ -147,7 +147,7 @@ USART_CR1_PS)
 #define NUM_NORMAL		8
 
 #define KEY_LEN_SPECIAL	2
-#define NUM_SPECIAL
+#define NUM_SPECIAL		3
 
 typedef struct key_data_normal {
 	char signs[KEY_LEN_NORMAL];
@@ -175,7 +175,26 @@ code	meaning		index in normal_keys
 key_data_normal normal_keys[NUM_NORMAL] = {
 									{{'A', 'B', 'C', '2'}},
 									{{'D', 'E', 'F', '3'}},
-									{}		
+									{{'G', 'H', 'I', '4'}},
+									{{'J', 'K', 'L', '5'}},
+									{{'M', 'N', 'O', '6'}},
+									{{'P', 'R', 'S', '7'}},
+									{{'T', 'U', 'V', '8'}},
+									{{'W', 'X', 'Y', '9'}}
+									};
+
+/*
+code	meaning		index in special_keys
+0		1 <			0
+12		* :			1
+13		0 Z			2
+14		# Q			3
+*/
+key_data_special special_keys[NUM_SPECIAL] = {
+									{{'1', '<'}},
+									{{'*', ':'}},
+									{{'0', 'Z'}},
+									{{'#', 'Q'}}
 									};
 
 int times_press_detected;
