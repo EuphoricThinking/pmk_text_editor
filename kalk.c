@@ -151,9 +151,19 @@ USART_CR1_PS)
 
 // Action keys codes
 #define SPACE 			3
-#define UPGRADE			7
+#define NEWLINE			7
 #define CLEAR_ONCE		11
 #define DELETE_ALL		15
+
+#define WRITE_CHAR		16
+
+#define NORMAL_MODE		0
+#define SPECIAL_MODE 	1
+#define ACTION_MODE		2
+
+#define ACTION_COL		3
+#define SPECIAL_ROW		3
+#define SINGLE_SPECIAL	0
 
 // LCD defines
 #define COL_ROLLBACK	9 	// Newline needed: increment text_line, set posiotn to 0
@@ -169,6 +179,7 @@ typedef struct key_data_special {
 
 typedef struct event {
 	int code;
+	int line;
 	int pos;
 	char letter;
 } event;
@@ -212,6 +223,7 @@ key_data_special special_keys[NUM_SPECIAL] = {
 									{{'#', 'Q'}}
 									};
 
+
 int times_press_detected;
 int text_line;
 int letter_pos;
@@ -252,8 +264,9 @@ event queue_events[LIMIT_QUEUED];
 
 int head;
 int tail;
+int letter_modulo;
 
-event empty_event = {-1, -1, '?'};
+event empty_event = {-1, -1, -1, '?'};
 
 void initialize_mess_length(void) {
 	for (int i = 0; i < MESS_NUM; i++) {
@@ -391,6 +404,44 @@ int calculate_key_index(int row_id, int col_id) {
 	return NUM_KEYS*(row_id - ROW1) + col_id;
 }
 
+int get_special_key_index(int key_id) {
+	if (key_id == 0) {
+		return 0;
+	}
+	else {
+		return (key_id%10) - 1;
+	}
+}
+
+int get_normal_key_index(int key_id) {
+	if (key_id < 3) {
+		return key_id - 1;
+	}
+	else if (key_id < 7) {
+		return key_id - 2;
+	}
+	else {
+		return key_id - 3;
+	}
+}
+
+event prepare_event_update_letter_modulo(int key_id) {
+	event result;
+
+	if (key_id%NUM_KEYS == ACTION_COL) {
+		result = {ACTION_MODE, text_line, letter_pos, '?'};
+	}
+	else if (key_id == SINGLE_SPECIAL || key_id/NUM_KEYS == SPECIAL_ROW) {
+		letter_modulo %= KEY_LEN_SPECIAL;
+		result = {SPECIAL_MODE, text_line, letter_pos, 
+				special_keys[get_special_key_index(key_id)][letter_modulo]};
+	}
+	else {
+		letter_modulo %= KEY_LEN_NORMAL;
+		result = {NORMAL_MODE, text_line, letter_pos,
+				normal_keys[get_normal_key_index(key_id)][letter_modulo]}
+	}
+}
 // rowcol rowcol_init(int row_number, int col_number) {
 // 	rowcol result;
 // 	result.row_id = row_number;
