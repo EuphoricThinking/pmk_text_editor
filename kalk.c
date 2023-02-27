@@ -155,6 +155,10 @@ USART_CR1_PS)
 #define CLEAR_ONCE		11
 #define DELETE_ALL		15
 
+// LCD defines
+#define COL_ROLLBACK	9 	// Newline needed: increment text_line, set posiotn to 0
+#define ROW_ROLLBACK	5	// Needs to clear the screen
+
 typedef struct key_data_normal {
 	char signs[KEY_LEN_NORMAL];
 } key_data_normal;
@@ -163,6 +167,11 @@ typedef struct key_data_special {
 	char signs[KEY_LEN_SPECIAL];
 } key_data_special;
 
+typedef struct event {
+	int code;
+	int pos;
+	char letter;
+} event;
 
 int key_pins[NUM_KEYS*2] = {PIN_COL1, PIN_COL2, PIN_COL3, PIN_COL4,
 							PIN_ROW1, PIN_ROW2, PIN_ROW3, PIN_ROW4};
@@ -204,6 +213,8 @@ key_data_special special_keys[NUM_SPECIAL] = {
 									};
 
 int times_press_detected;
+int text_line;
+int letter_pos;
 
 #define RedLEDon() \
 RED_LED_GPIO->BSRR = 1 << (RED_LED_PIN + 16)
@@ -509,9 +520,6 @@ void contact_vibration_cleanup(void) {
 	NVIC_EnableIRQ(EXTI9_5_IRQn);
 }
 
-int line;
-int letter_pos = 1;
-
 void TIM3_IRQHandler(void) {
 	uint32_t it_status = TIM3->SR & TIM3->DIER;
 
@@ -544,28 +552,28 @@ void TIM3_IRQHandler(void) {
 				push(pressed_key_id);
 
 				LCDputcharWrap('B');
-				letter_pos++;
+				// letter_pos++;
 
-				if (letter_pos == 9) {
-					line++;
-					letter_pos = 0;
-				}
+				// if (letter_pos == 9) {
+				// 	line++;
+				// 	letter_pos = 0;
+				// }
 
-				if (letter_pos == 4 && line == 0) {
-					LCDgoto(line, 0);
-					LCDputchar('C');
-					LCDgoto(line, 4);
-					LCDputchar('E');
-					letter_pos = 5;
-				}
+				// if (letter_pos == 4 && line == 0) {
+				// 	LCDgoto(line, 0);
+				// 	LCDputchar('C');
+				// 	LCDgoto(line, 4);
+				// 	LCDputchar('E');
+				// 	letter_pos = 5;
+				// }
 
-				if (letter_pos == 5 && line == 2) {
-					LCDgoto(0, 2);
-					LCDputcharWrap('D');
-					LCDgoto(2, 5);
-					LCDputchar(' ');
-					letter_pos = 6;
-				}
+				// if (letter_pos == 5 && line == 2) {
+				// 	LCDgoto(0, 2);
+				// 	LCDputcharWrap('D');
+				// 	LCDgoto(2, 5);
+				// 	LCDputchar(' ');
+				// 	letter_pos = 6;
+				// }
 
 				//times_press_detected = 0;
 				contact_vibration_cleanup();
@@ -896,7 +904,7 @@ int main() {
 	// initialize_mess_length();
 	BlueLEDon();
 	// LCDclear();
-	LCDputchar('A');
+//	LCDputchar('A');
 
 	// if ((KEYBOARD_GPIO->IDR >> PIN_ROW1) & 1) {
 	// 	BlueLEDoff();
