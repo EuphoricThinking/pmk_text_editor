@@ -590,14 +590,12 @@ void TIM2_IRQHandler(void) {
 
 
 int check_key_pressed_return_key_id(void) {
-	// set_low_state(0);
 
 	BlueLEDoff();
 	RedLEDoff();
 	GreenLEDoff();
 	Green2LEDoff();
 
-	//bool pressed = false;
 	for (int col_id = COL1; col_id <= COL4; col_id++) {
 
 		set_low_state(key_pins[col_id]);
@@ -619,33 +617,14 @@ int check_key_pressed_return_key_id(void) {
 					Green2LEDon();
 				}
 
-				// return rowcol_init(row_id, col_id);
 				return calculate_key_index(row_id, col_id);
-				// pressed = true;
 
-				// push(calculate_key_index(row_id, col_id));
 			}
 		}
 
 		set_high_state(key_pins[col_id]);
 	}
 
-	// if (!((KEYBOARD_GPIO->IDR >> PIN_ROW1) & 1)) {
-	// 	RedLEDon();
-	// }
-
-	// if (!((KEYBOARD_GPIO->IDR >> PIN_ROW2) & 1)) {
-	// 	BlueLEDon();
-	// }
-
-	// if (!((KEYBOARD_GPIO->IDR >> PIN_ROW3) & 1)) {
-	// 	GreenLEDon();
-	// }
-
-	// set_high_state(0);
-
-	//return pressed;
-	//return rowcol_init(NOT_PRESSED, NOT_PRESSED);
 	return NOT_PRESSED;
 }
 
@@ -690,60 +669,20 @@ void TIM3_IRQHandler(void) {
 				push(pressed_key_id);
 
 				LCDputcharWrap('B');
-				// letter_pos++;
-
-				// if (letter_pos == 9) {
-				// 	line++;
-				// 	letter_pos = 0;
-				// }
-
-				// if (letter_pos == 4 && line == 0) {
-				// 	LCDgoto(line, 0);
-				// 	LCDputchar('C');
-				// 	LCDgoto(line, 4);
-				// 	LCDputchar('E');
-				// 	letter_pos = 5;
-				// }
-
-				// if (letter_pos == 5 && line == 2) {
-				// 	LCDgoto(0, 2);
-				// 	LCDputcharWrap('D');
-				// 	LCDgoto(2, 5);
-				// 	LCDputchar(' ');
-				// 	letter_pos = 6;
-				// }
-
-				//times_press_detected = 0;
 				contact_vibration_cleanup();
 			}
 		}
 		else {
 			// None of the key is pressed or has been pressed due to the contact vibration
 			
-			// BlueLEDoff();
-			// RedLEDoff();
-			// GreenLEDon();
-			// int check = SystemCoreClock;
-
 			
 			contact_vibration_cleanup();
-			// times_press_detected = 0;
-			
-			// stop_bounce_timer_TIM3();
-			// set_columns_low_state();
-			// set_rows_EXTI_to_zero();
-			// NVIC_EnableIRQ(EXTI9_5_IRQn);
 		}
 	}
 
 	if (it_status & TIM_SR_CC1IF) {
 		TIM3->SR = ~TIM_SR_CC1IF;
 		// TODO
-		// BlueLEDoff();
-		// RedLEDoff();
-		// GreenLEDoff();
-		// Green2LEDoff();
-		// GreenLEDon();
 	}
 }
 
