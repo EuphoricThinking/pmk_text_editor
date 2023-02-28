@@ -752,9 +752,9 @@ void contact_vibration_cleanup(void) {
 	NVIC_EnableIRQ(EXTI9_5_IRQn);
 }
 
-void order_new_pos_for_writing(int key_id) {
+event order_new_pos_for_writing(int key_id) {
 	letter_modulo = 0;
-	prepare_event_update_letter_modulo(key_id, WRITE_NEW);
+	return prepare_event_update_letter_modulo(key_id, WRITE_NEW);
 }
 
 void TIM3_IRQHandler(void) {
@@ -789,6 +789,7 @@ void TIM3_IRQHandler(void) {
 				// push(pressed_key_id);
 
 				// LCDputcharWrap('B');
+				event to_be_queued;
 				
 				if (is_interval_timer_on()) {
 					uint32_t counted_ticks = TIM2->CNT;
@@ -803,18 +804,19 @@ void TIM3_IRQHandler(void) {
 						&& !is_action_key(pressed_key_id)
 						&& get_last_code() == pressed_key_id) {
 							letter_modulo++;
-							prepare_event_update_letter_modulo(pressed_key_id, REPEAT_KEY);
+							to_be_queued = 
+								prepare_event_update_letter_modulo(pressed_key_id, REPEAT_KEY);
 					}
 					else {
-						order_new_pos_for_writing(pressed_key_id);
+						to_be_queued = order_new_pos_for_writing(pressed_key_id);
 					}
 				}
 				else {
-					order_new_pos_for_writing(pressed_key_id);
+					to_be_queued = order_new_pos_for_writing(pressed_key_id);
 
 				}
 				
-				
+				push(to_be_queued);
 				
 				start_interval_timer_TIM2();
 				
