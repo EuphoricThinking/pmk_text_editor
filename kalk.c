@@ -864,7 +864,7 @@ void TIM3_IRQHandler(void) {
 						&& !is_action_key(pressed_key_id)
 						&& last_letter == pressed_key_id) {
 						// && is_last_letter_same_as_current(pressed_key_id)) {
-							LCDputcharWrap('%');
+							// LCDputcharWrap('%');
 							letter_modulo++;
 							to_be_queued = 
 								prepare_event_update_letter_modulo(pressed_key_id, REPEAT_KEY);
