@@ -157,7 +157,8 @@ USART_CR1_PS)
 #define CLEAR_ONCE		11
 #define DELETE_ALL		15
 
-#define WRITE_CHAR		16
+#define WRITE_NEW		16
+#define REPEAT_KEY		17
 
 #define NORMAL_MODE		0
 #define SPECIAL_MODE 	1
@@ -173,9 +174,9 @@ USART_CR1_PS)
 
 typedef struct event {
 	int code;
-	int line;
-	int pos;
+	int write_mode;
 	char letter;
+	int letter_code;
 } event;
 
 int key_pins[NUM_KEYS*2] = {PIN_COL1, PIN_COL2, PIN_COL3, PIN_COL4,
@@ -260,7 +261,7 @@ int head;
 int tail;
 int letter_modulo;
 
-event empty_event = {-1, -1, -1, '?'};
+event empty_event = {-1, -1, '?', -1};
 
 void initialize_mess_length(void) {
 	for (int i = 0; i < MESS_NUM; i++) {
@@ -348,6 +349,14 @@ event peek(void) {
 	}
 }
 
+int get_last_code(void) {
+	if (!empty_queue()) {
+		return queue_events[tail - 1].letter_code;
+	}
+	else {
+		return -1;
+	}
+}
 
 
 /******************
@@ -419,24 +428,29 @@ int get_normal_key_index(int key_id) {
 	}
 }
 
-event prepare_event_update_letter_modulo(int key_id) {
+bool is_action_key(int key_id) {
+	return key_id%NUM_KEYS == ACTION_COL;
+}
+event prepare_event_update_letter_modulo(int key_id, int mode) {
 	event result;
 
-	if (key_id%NUM_KEYS == ACTION_COL) {
-		result = (event) { .code = ACTION_MODE, .line = text_line, 
-			.pos = letter_pos, .letter = '?'};
+	if (is_action_key(key_id)) {
+		result = (event) { .code = ACTION_MODE, .write_mode = -1, .letter = '?', 
+			.letter_code = key_id};
 	}
 	else if (key_id == SINGLE_SPECIAL || key_id/NUM_KEYS == SPECIAL_ROW) {
 		letter_modulo %= KEY_LEN_SPECIAL;
-		result = (event) { .code = SPECIAL_MODE, .line = text_line, 
-			.pos = letter_pos, 
-			.letter = special_keys[get_special_key_index(key_id)][letter_modulo]};
+		result = (event) { .code = SPECIAL_MODE,
+			.write_mode = mode,
+			.letter = special_keys[get_special_key_index(key_id)][letter_modulo],
+			.letter_code = key_id};
 	}
 	else {
 		letter_modulo %= KEY_LEN_NORMAL;
-		result = (event) { .code = NORMAL_MODE, .line = text_line, 
-			.pos = letter_pos,
-			.letter = normal_keys[get_normal_key_index(key_id)][letter_modulo]};
+		result = (event) { .code = NORMAL_MODE, 
+			.write_mode = mode,
+			.letter = normal_keys[get_normal_key_index(key_id)][letter_modulo],
+			.letter_code = key_id};
 	}
 
 	return result;
@@ -641,6 +655,11 @@ void contact_vibration_cleanup(void) {
 	NVIC_EnableIRQ(EXTI9_5_IRQn);
 }
 
+void order_new_pos_for_writing(int key_id) {
+	letter_modulo = 0;
+	prepare_event_update_letter_modulo(key_id, WRITE_NEW);
+}
+
 void TIM3_IRQHandler(void) {
 	uint32_t it_status = TIM3->SR & TIM3->DIER;
 
@@ -670,9 +689,38 @@ void TIM3_IRQHandler(void) {
 				// TODO 
 				// A key is probably REALLY pressed
 				//push(calculate_key_index(row_id, col_id));
-				push(pressed_key_id);
+				// push(pressed_key_id);
 
-				LCDputcharWrap('B');
+				// LCDputcharWrap('B');
+				
+				if (is_interval_timer_on()) {
+					uint32_t counted_ticks = TIM2->CNT;
+					
+					stop_interval_timer_TIM2();
+					TIM2->CNT = 0;
+					
+					/*
+					1 tick per millisecond
+					*/
+					if (counted_ticks <= UPGRADE_TRESHOLD
+						&& !is_action_key(pressed_key_id)
+						&& get_last_code() == pressed_key_id) {
+							letter_modulo++;
+							prepare_event_update_letter_modulo(key_id, REPEAT_KEY);
+					}
+					else {
+						order_new_pos_for_writing(pressed_key_id);
+					}
+				}
+				else {
+					order_new_pos_for_writing(pressed_key_id);
+
+				}
+				
+				
+				
+				start_interval_timer_TIM2();
+				
 				contact_vibration_cleanup();
 			}
 		}
@@ -932,6 +980,11 @@ void configure(void) {
 	// Clock needs some time to be turned on // taktowanie
 	__NOP();
 
+	// Configure interval clock
+	set_clock_and_initial_TIM2_registers_values_without_starting();
+	enable_interruptions_TIM2();
+
+	// Configure contact vibration detecting clock
 	set_clock_and_initial_TIM3_registers_values_without_starting();
 	enable_interruptions_TIM3();
 
