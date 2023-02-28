@@ -223,7 +223,6 @@ char special_keys[NUM_SPECIAL][KEY_LEN_SPECIAL] = {
 int times_press_detected;
 int text_line;
 int current_cursor_col;
-int setme;
 int last_letter = -1;
 
 #define RedLEDon() \
@@ -879,15 +878,6 @@ void TIM3_IRQHandler(void) {
 
 				last_letter = pressed_key_id;
 				
-
-				if (!empty_queue()) {
-					//LCDputcharWrap('F');
-					// LCDputcharWrap((tail - head) + 48);
-					setme++;
-				}
-				else {
-					//LCDputcharWrap('E');
-				}
 
 
 				start_interval_timer_TIM2();
