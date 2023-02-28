@@ -571,6 +571,10 @@ void stop_interval_timer_TIM2(void) {
 	TIM2->CR1 &= ~TIM_CR1_CEN;
 }
 
+bool is_interval_timer_on(void) {
+	return ((TIM2->CR1 & TIM_CR1_CEN) != 0);
+}
+
 void TIM2_IRQHandler(void) {
 	uint32_t it_status = TIM2->SR & TIM2->DIER;
 
