@@ -223,7 +223,7 @@ char special_keys[NUM_SPECIAL][KEY_LEN_SPECIAL] = {
 int times_press_detected;
 int text_line;
 int current_cursor_col;
-int last_letter = -1;
+int previous_key_code = -1;
 
 #define RedLEDon() \
 RED_LED_GPIO->BSRR = 1 << (RED_LED_PIN + 16)
@@ -267,13 +267,6 @@ int previous_key;
 
 event empty_event = {-1, '?'};
 
-void turn_all_off() {
-	RedLEDoff();
-	BlueLEDoff();
-	GreenLEDoff();
-	Green2LEDoff();
-}
-
 void initialize_mess_length(void) {
 	for (int i = 0; i < MESS_NUM; i++) {
 		mess_length[i] = strlen(messages[i]);
@@ -305,33 +298,13 @@ int check_single_state(int id) {
 
 QUEUE
 
-add mutexes
-
-Yes you can use it directly in the expression you pass as argument.
-
-A statement like
-
-fix_up(pQueue->heap, pQueue->size++);
-is somewhat equivalent to
-
-{
-    int old_value = pQueue->size;
-    pQueue->size = pQueue->size + 1;
-    fix_up(pQueue->heap, old_value);
-}
-
 *****************/
 
-/*
-Thread safety analysis will be provided by the author during the appointment
-because it seems to be a lenghty explanation.
-*/
 bool empty_queue(void) {
 	return head == tail;
 }
 
 event pop(void) {
-	// LCDputcharWrap('R');
 	if (head == LIMIT_QUEUED || head == tail) {
 		return empty_event;
 	}
@@ -343,11 +316,9 @@ event pop(void) {
 
 void push(event id) {
 	if (tail != LIMIT_QUEUED) {
-		// LCDputcharWrap('B');
 		queue_events[tail++] = id;
 	}
 	else if (head == tail) {
-		// LCDputcharWrap('A');
 		head = 0;
 		tail = 0;
 		queue_events[tail++] = id;
@@ -362,18 +333,6 @@ event peek(void) {
 		return queue_events[head];
 	}
 }
-
-// bool is_last_letter_same_as_current(int key_id) {
-// 	LCDputcharWrap('^');
-// 	LCDputcharWrap(48 + empty_queue());
-// 	if (empty_queue()
-// 		|| key_id != queue_events[tail - 1].key_code) {
-// 			return false;
-// 	}
-// 	else {
-// 		return true;
-// 	}
-// }
 
 
 /******************
@@ -497,9 +456,6 @@ void update_text_line_current_cursor_position_forward(void) {
 	current_cursor_col++;
 	if (current_cursor_col == COL_ROLLBACK) {
 		text_line++;
-		// if (text_line != ROW_ROLLBACK) {
-		// 	current_cursor_col = 0;
-		// }
 		current_cursor_col = 0;
 	}
 }
@@ -518,10 +474,6 @@ void update_text_line_current_cursor_position_backward(void) {
 void process_an_event() {
 	event to_display = pop();
 
-	turn_all_off();
-	GreenLEDon();
-	// LCDputcharWrap('P');
-
 	int mode_code = to_display.write_mode;
 
 	if (is_action_key(mode_code)) {
@@ -531,7 +483,6 @@ void process_an_event() {
 		C - CLEAR_ONCE
 		D - DELETE_ALL
 		*/
-		// mode_code = to_display.key_code;
 
 		if (mode_code == DELETE_ALL) {
 			LCDclear();
@@ -545,7 +496,6 @@ void process_an_event() {
 			LCDgoto(text_line, current_cursor_col);
 		}
 		else if (mode_code == SPACE && is_writing_possible()) {
-			// LCDputcharWrap(' ');
 			LCDputchar(' ');
 			update_text_line_current_cursor_position_forward();
 		}
@@ -567,15 +517,6 @@ void process_an_event() {
 		update_text_line_current_cursor_position_forward();
 	}
 }
-
-// rowcol rowcol_init(int row_number, int col_number) {
-// 	rowcol result;
-// 	result.row_id = row_number;
-// 	result.col_id = col_number;
-
-// 	return result;
-// }
-
 
 /************************************
 
@@ -691,7 +632,6 @@ void enable_interruptions_TIM2(void) {
 }
 
 void start_interval_timer_TIM2(void) {
-	// LCDputcharWrap('+');
 	TIM2->CR1 |= TIM_CR1_CEN;
 }
 
@@ -700,7 +640,6 @@ void stop_interval_timer_TIM2(void) {
 }
 
 bool is_interval_timer_on(void) {
-	// LCDputcharWrap('@');
 	return ((TIM2->CR1 & TIM_CR1_CEN) != 0);
 }
 
@@ -724,11 +663,6 @@ void TIM2_IRQHandler(void) {
 
 int check_key_pressed_return_key_id(void) {
 
-	BlueLEDoff();
-	RedLEDoff();
-	GreenLEDoff();
-	Green2LEDoff();
-
 	for (int col_id = COL1; col_id <= COL4; col_id++) {
 
 		set_low_state(key_pins[col_id]);
@@ -737,26 +671,8 @@ int check_key_pressed_return_key_id(void) {
 			bool is_pressed = is_row_pressed(key_pins[row_id]);
 
 			if (is_pressed) {
-				if (row_id == ROW1) {
-					RedLEDon();
-				}
-				else if (row_id == ROW2) {
-					BlueLEDon();
-				}
-				else if (row_id == ROW3) {
-					GreenLEDon();
-				}
-				else {
-					Green2LEDon();
-				}
 
-				// LCDclear();
-				// LCDputchar(48 + row_id);
-				// LCDputchar(' ');
-				// LCDputchar(48 + col_id);
-				// LCDputchar('T');
-
-				set_high_state(key_pins[col_id]); // ADDED
+				set_high_state(key_pins[col_id]);
 
 				return calculate_key_index(row_id, col_id);
 
@@ -783,84 +699,37 @@ event order_new_pos_for_writing(int key_id) {
 	return prepare_event_update_letter_modulo(key_id, WRITE_NEW);
 }
 
-void printout_TIM2_cnt(int val) {
-	LCDputcharWrap('|');
-	if (val == 0) {
-		LCDputcharWrap('0');
-		return;
-	}
-
-	while (val != 0) {
-		LCDputcharWrap(48 + (val%10));
-		val /= 10;
-	}
-	LCDputcharWrap('_');
-}
-
 void TIM3_IRQHandler(void) {
 	uint32_t it_status = TIM3->SR & TIM3->DIER;
 
 	if (it_status & TIM_SR_UIF) {
 		TIM3->SR = ~TIM_SR_UIF;
-		// TODO
 		// Handle the interruption
-		// BlueLEDoff();
-		// RedLEDoff();
-		// GreenLEDoff();
-		// Green2LEDoff();
-		// RedLEDon();
 
 		// Scan the keypad
 		int pressed_key_id = check_key_pressed_return_key_id();
-
-		// if (times_press_detected == 0) {
-		// 	previous_key = pressed_key_id;
-		// }
 		
-		if (pressed_key_id != NOT_PRESSED) { //} && pressed_key_id == previous_key) {
+		if (pressed_key_id != NOT_PRESSED) {
 			if (times_press_detected < PRESS_TRIES) {
-				// TODO test
-				// BlueLEDoff();
-				// GreenLEDoff();
-				// RedLEDon();
 				// Repeat the cycle several times in order to exclude the contact vibration
 				times_press_detected++;
 			}
 			else {
-				// LCDputcharWrap('C');
-				// // LCDputcharWrap(48 + (pressed_key_id == 0));
-				// // LCDputcharWrap('_');
-				// LCDputcharWrap(48 + (pressed_key_id/10));
-				// LCDputcharWrap(48 + (pressed_key_id%10));
-				// LCDputcharWrap('\n');
-				// TODO 
 				// A key is probably REALLY pressed
-				//push(calculate_key_index(row_id, col_id));
-				// push(pressed_key_id);
-
-				// LCDputcharWrap('B');
 				event to_be_queued;
-				//LCDputchar('H');
 				
 				if (is_interval_timer_on()) {
-					// LCDputcharWrap('?');
 					uint32_t counted_ticks = TIM2->CNT;
 					
 					stop_interval_timer_TIM2();
 					TIM2->CNT = 0;
 
-					// printout_TIM2_cnt(counted_ticks);
-					
-					// LCDputcharWrap('+');
-					// LCDputcharWrap(48 + is_last_letter_same_as_current(pressed_key_id));
 					/*
 					1 tick per millisecond
 					*/
 					if (counted_ticks <= UPGRADE_TRESHOLD
 						&& !is_action_key(pressed_key_id)
-						&& last_letter == pressed_key_id) {
-						// && is_last_letter_same_as_current(pressed_key_id)) {
-							// LCDputcharWrap('%');
+						&& previous_key_code == pressed_key_id) {
 							letter_modulo++;
 							to_be_queued = 
 								prepare_event_update_letter_modulo(pressed_key_id, REPEAT_KEY);
@@ -876,7 +745,7 @@ void TIM3_IRQHandler(void) {
 				
 				push(to_be_queued);
 
-				last_letter = pressed_key_id;
+				previous_key_code = pressed_key_id;
 				
 
 
@@ -895,19 +764,9 @@ void TIM3_IRQHandler(void) {
 
 	if (it_status & TIM_SR_CC1IF) {
 		TIM3->SR = ~TIM_SR_CC1IF;
-		// TODO
 	}
-
-	// turn_all_off();
 	
 }
-
-/*
-
-0 1 2 3 4
-1 2 3 4
-*/
-
 
 
 /*************************
@@ -958,8 +817,6 @@ KEYPAD CONFIGURATION
 **********/
 
 void configure_gpio_keypad(void) {
-	// TODO
-
 	// Configure columns
 	// COL1 - PC0
 	GPIOoutConfigure(GPIOC, 
@@ -1011,10 +868,6 @@ void configure_gpio_keypad(void) {
 					EXTI_Mode_Interrupt,
 					EXTI_Trigger_Falling);
 
-	// wyjście przewsobne - push-pull
-	// rezystor podciągający pull up
-	// rezystor ściągający pull down
-	// TYLKO WIERSZE
 	// IRQ
 }
 
@@ -1032,30 +885,19 @@ void EXTI9_5_IRQHandler(void) {
 	// Set interrupt flags to zero
 	if (EXTI->PR & EXTI_PR_PR6) {
 		EXTI->PR = EXTI_PR_PR6;
-		// queue_to_send(DOWN_BTN*2 + check_single_state(DOWN_BTN));
-		// TODO
 	}
 
 	if (EXTI->PR & EXTI_PR_PR7) {
 		EXTI->PR = EXTI_PR_PR7;
-		// queue_to_send(UP_BTN*2 + check_single_state(UP_BTN));
-		// TODO
 	}
 
 	if (EXTI->PR & EXTI_PR_PR8) {
 		EXTI->PR = EXTI_PR_PR8;
-		// queue_to_send(UP_BTN*2 + check_single_state(UP_BTN));
-		// TODO
 	}
 
 	if (EXTI->PR & EXTI_PR_PR9) {
 		EXTI->PR = EXTI_PR_PR9;
-		// queue_to_send(UP_BTN*2 + check_single_state(UP_BTN));
-		// TODO
 	}
-
-	// BlueLEDoff();
-	// RedLEDon();
 
 	set_columns_high_state();
 
@@ -1068,16 +910,10 @@ void EXTI9_5_IRQHandler(void) {
 void configure_clock_rows_cols_interruptions(void) {
 	RCC->AHB1ENR |= RCC_AHB1ENR_GPIOCEN | 		// keypad
 					RCC_AHB1ENR_DMA1EN; 		// DMA
-					// RCC_APB1ENR_TIM3EN;		// Timer TIM3
-
-	// Usart 
-	
+					// RCC_APB1ENR_TIM3EN;		// Timer TIM3	
 
 	// SYSCFGEN (INTERRUPT)
 	RCC->APB2ENR |= RCC_APB2ENR_SYSCFGEN;
-
-	// // Clock needs some time to be turned on // taktowanie
-	// __NOP();
 }
 
 void usart_configuration(void) {
@@ -1164,77 +1000,14 @@ void initialize_send_DMA(char* mess, int len) {
 	DMA1_Stream6->CR |= DMA_SxCR_EN;
 }
 
-/*
-// DMA
-void queue_to_send(int message_index) {
-	// Transfer is possible
-	if ((DMA1_Stream6->CR & DMA_SxCR_EN) == 0 &&
-		(DMA1->HISR & DMA_HISR_TCIF6) == 0) {
-			initialize_send_DMA(messages[message_index], 
-								mess_length[message_index]);
-	}
-	// Needs to be queued
-	else {
-		push(message_index);
-	}
-}
-
-// DMA1 Stream6 IRQ implementation
-void DMA1_Stream6_IRQHandler() {
-// Read emerged DMA1 interrupt
-	uint32_t isr = DMA1->HISR;
-	if (isr & DMA_HISR_TCIF6) {
-		// Handle the end of transmission in stream 6; clear flag
-		DMA1->HIFCR = DMA_HIFCR_CTCIF6;
-		
-		// Send if there is a message to send
-		if (!empty_queue()) {
-			int mess_id = pop();
-			initialize_send_DMA(messages[mess_id], mess_length[mess_id]);
-		}
-	}
-}
-*/
-
 int main() {
 	configure();
-	// initialize_mess_length();
 	BlueLEDon();
-	// LCDclear();
-//	LCDputchar('A');
 
-	// if ((KEYBOARD_GPIO->IDR >> PIN_ROW1) & 1) {
-	// 	BlueLEDoff();
-	// 	GreenLEDoff();
-	// 	RedLEDon();
-
-	// }
-	// else {
-	// 	RedLEDoff();
-	// 	BlueLEDoff();
-	// 	GreenLEDon();
-
-	// }
-
-	//int prev = 0;
-	// LCDputchar('W');
 	while (1) {
-		// turn_all_off();
-		// RedLEDon();
-
 		if (!empty_queue()) {
-			// LCDputchar('O');
-			
-			// turn_all_off();
-			// GreenLEDon();
-			
 			process_an_event();
 		}
-		// if (setme != prev) {
-		// 	prev = setme;
-		// 	LCDputcharWrap((tail - head) + 48);
-		// 	// process_an_event();
-		// }
 	}
 	
 	return 0;
