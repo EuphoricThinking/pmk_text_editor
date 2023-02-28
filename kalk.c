@@ -264,6 +264,8 @@ volatile int head;
 volatile int tail;
 int letter_modulo;
 
+int previous_key;
+
 event empty_event = {-1, '?', -1};
 
 void turn_all_off() {
@@ -520,7 +522,7 @@ void process_an_event() {
 
 	turn_all_off();
 	GreenLEDon();
-	LCDputcharWrap('P');
+	// LCDputcharWrap('P');
 
 	int mode_code = to_display.write_mode;
 
@@ -747,6 +749,14 @@ int check_key_pressed_return_key_id(void) {
 					Green2LEDon();
 				}
 
+				// LCDclear();
+				LCDputchar(48 + row_id);
+				LCDputchar(' ');
+				LCDputchar(48 + col_id);
+				LCDputchar('T');
+
+				set_high_state(key_pins[col_id]); // ADDED
+
 				return calculate_key_index(row_id, col_id);
 
 			}
@@ -787,8 +797,12 @@ void TIM3_IRQHandler(void) {
 
 		// Scan the keypad
 		int pressed_key_id = check_key_pressed_return_key_id();
+
+		// if (times_press_detected == 0) {
+		// 	previous_key = pressed_key_id;
+		// }
 		
-		if (pressed_key_id != NOT_PRESSED) {
+		if (pressed_key_id != NOT_PRESSED) { //} && pressed_key_id == previous_key) {
 			if (times_press_detected < PRESS_TRIES) {
 				// TODO test
 				// BlueLEDoff();
@@ -798,6 +812,12 @@ void TIM3_IRQHandler(void) {
 				times_press_detected++;
 			}
 			else {
+				LCDputcharWrap('C');
+				// LCDputcharWrap(48 + (pressed_key_id == 0));
+				// LCDputcharWrap('_');
+				LCDputcharWrap(48 + (pressed_key_id/10));
+				LCDputcharWrap(48 + (pressed_key_id%10));
+				LCDputcharWrap('\n');
 				// TODO 
 				// A key is probably REALLY pressed
 				//push(calculate_key_index(row_id, col_id));
@@ -1182,7 +1202,7 @@ int main() {
 	// }
 
 	//int prev = 0;
-	LCDputchar('W');
+	// LCDputchar('W');
 	while (1) {
 		// turn_all_off();
 		// RedLEDon();
