@@ -5,8 +5,6 @@
 #include <stdbool.h>
 #include <lcd.h>
 
-// URUCHOM RUN /opt/arm/stm32/ocd/qfn4 
-
 #define LIMIT_QUEUED 100
 
 
