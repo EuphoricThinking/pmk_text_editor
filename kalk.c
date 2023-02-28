@@ -172,6 +172,9 @@ USART_CR1_PS)
 #define COL_ROLLBACK	9 	// Newline needed: increment text_line, set posiotn to 0
 #define ROW_ROLLBACK	5	// Needs to clear the screen
 
+#define LAST_COLUMN		8
+#define LAST_ROW		4
+
 typedef struct event {
 	int code;
 	int write_mode;
@@ -221,7 +224,7 @@ char special_keys[NUM_SPECIAL][KEY_LEN_SPECIAL] = {
 
 int times_press_detected;
 int text_line;
-int letter_pos;
+int current_cursor_col;
 
 #define RedLEDon() \
 RED_LED_GPIO->BSRR = 1 << (RED_LED_PIN + 16)
@@ -431,6 +434,7 @@ int get_normal_key_index(int key_id) {
 bool is_action_key(int key_id) {
 	return key_id%NUM_KEYS == ACTION_COL;
 }
+
 event prepare_event_update_letter_modulo(int key_id, int mode) {
 	event result;
 
@@ -455,6 +459,83 @@ event prepare_event_update_letter_modulo(int key_id, int mode) {
 
 	return result;
 }
+
+/*******************
+
+PROCESS EVENTS
+
+********************/
+
+bool is_writing_possible(void) {
+	if (current_cursor_col == LAST_COLUMN) {
+		if (text_line == LAST_ROW) {
+			return false;
+		}
+		else {
+			return true;
+		}
+	}
+}
+
+void update_text_line_current_cursor_position_forward(void) {
+	current_cursor_col++;
+	if (current_cursor_col == COL_ROLLBACK) {
+		text_line++;
+		if (text_line != ROW_ROLLBACK) {
+			current_cursor_col = 0;
+		}
+	}
+}
+
+void update_text_line_current_cursor_position_backward(void) {
+	if (current_cursor_col > 0 || text_line > 0) {
+		current_cursor_col--;
+
+		if (current_cursor_col < 0) {
+			current_cursor_col = LAST_COLUMN;
+			text_line--;
+		}
+	}
+}
+
+void process_event() {
+	event to_display = pop();
+
+	int mode_code = to_display.code;
+
+	// Always enable clearing
+	if (mode_code == ACTION_MODE) {
+		/*
+		A - SPACE
+		B - NEWLINE
+		C - CLEAR_ONCE
+		D - DELETE_ALL
+		*/
+		mode_code = to_display.letter_code;
+
+		if (mode_code == DELETE_ALL) {
+			LCDclear();
+			text_line = 0;
+			current_cursor_col = 0;
+		}
+		else if (mode_code == CLEAR_ONCE) {
+			update_text_line_current_cursor_position_backward();
+			LCDgoto(text_line, current_cursor_col);
+			LCDputchar(' ');
+			LCDgoto(text_line, current_cursor_col);
+		}
+		else if (mode_code == SPACE && is_writing_possible()) {
+			LCDputcharWrap(' ');
+			update_text_line_current_cursor_position_forward();
+		}
+		else if (mode_code == NEWLINE && text_line != LAST_ROW) {
+			LCDputchar('\n');
+			current_cursor_col = 0;
+			text_line++;
+		}
+	}
+}
+
 // rowcol rowcol_init(int row_number, int col_number) {
 // 	rowcol result;
 // 	result.row_id = row_number;
