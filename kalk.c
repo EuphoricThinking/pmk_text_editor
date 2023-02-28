@@ -365,6 +365,8 @@ event peek(void) {
 }
 
 bool is_last_letter_same_as_current(int key_id) {
+	LCDputcharWrap('^');
+	LCDputcharWrap(48 + empty_queue());
 	if (empty_queue()
 		|| key_id != queue_events[tail - 1].key_code) {
 			return false;
@@ -692,6 +694,7 @@ void enable_interruptions_TIM2(void) {
 }
 
 void start_interval_timer_TIM2(void) {
+	// LCDputcharWrap('+');
 	TIM2->CR1 |= TIM_CR1_CEN;
 }
 
@@ -700,6 +703,7 @@ void stop_interval_timer_TIM2(void) {
 }
 
 bool is_interval_timer_on(void) {
+	// LCDputcharWrap('@');
 	return ((TIM2->CR1 & TIM_CR1_CEN) != 0);
 }
 
@@ -782,6 +786,20 @@ event order_new_pos_for_writing(int key_id) {
 	return prepare_event_update_letter_modulo(key_id, WRITE_NEW);
 }
 
+void printout_TIM2_cnt(int val) {
+	LCDputcharWrap('|');
+	if (val == 0) {
+		LCDputcharWrap('0');
+		return;
+	}
+
+	while (val != 0) {
+		LCDputcharWrap(48 + (val%10));
+		val /= 10;
+	}
+	LCDputcharWrap('_');
+}
+
 void TIM3_IRQHandler(void) {
 	uint32_t it_status = TIM3->SR & TIM3->DIER;
 
@@ -828,17 +846,23 @@ void TIM3_IRQHandler(void) {
 				//LCDputchar('H');
 				
 				if (is_interval_timer_on()) {
+					// LCDputcharWrap('?');
 					uint32_t counted_ticks = TIM2->CNT;
 					
 					stop_interval_timer_TIM2();
 					TIM2->CNT = 0;
+
+					// printout_TIM2_cnt(counted_ticks);
 					
+					// LCDputcharWrap('+');
+					// LCDputcharWrap(48 + is_last_letter_same_as_current(pressed_key_id));
 					/*
 					1 tick per millisecond
 					*/
 					if (counted_ticks <= UPGRADE_TRESHOLD
 						&& !is_action_key(pressed_key_id)
 						&& is_last_letter_same_as_current(pressed_key_id)) {
+							LCDputcharWrap('%');
 							letter_modulo++;
 							to_be_queued = 
 								prepare_event_update_letter_modulo(pressed_key_id, REPEAT_KEY);
