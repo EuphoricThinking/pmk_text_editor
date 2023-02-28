@@ -494,7 +494,7 @@ void update_text_line_current_cursor_position_forward(void) {
 }
 
 void update_text_line_current_cursor_position_backward(void) {
-	if (current_cursor_col > 0 || text_line > 0) {
+	if (current_cursor_col > 0 && text_line > 0) {
 		current_cursor_col--;
 
 		if (current_cursor_col < 0) {
@@ -509,7 +509,6 @@ void process_an_event() {
 
 	int mode_code = to_display.write_mode;
 
-	// Always enable clearing
 	if (mode_code == ACTION_MODE) {
 		/*
 		A - SPACE
