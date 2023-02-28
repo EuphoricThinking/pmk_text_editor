@@ -476,6 +476,9 @@ bool is_writing_possible(void) {
 			return true;
 		}
 	}
+	else {
+		return true;
+	}
 }
 
 void update_text_line_current_cursor_position_forward(void) {
@@ -799,7 +802,7 @@ void TIM3_IRQHandler(void) {
 						&& !is_action_key(pressed_key_id)
 						&& get_last_code() == pressed_key_id) {
 							letter_modulo++;
-							prepare_event_update_letter_modulo(key_id, REPEAT_KEY);
+							prepare_event_update_letter_modulo(pressed_key_id, REPEAT_KEY);
 					}
 					else {
 						order_new_pos_for_writing(pressed_key_id);
@@ -1093,7 +1096,7 @@ void initialize_send_DMA(char* mess, int len) {
 	DMA1_Stream6->CR |= DMA_SxCR_EN;
 }
 
-
+/*
 // DMA
 void queue_to_send(int message_index) {
 	// Transfer is possible
@@ -1123,7 +1126,7 @@ void DMA1_Stream6_IRQHandler() {
 		}
 	}
 }
-
+*/
 
 
 int main() {
