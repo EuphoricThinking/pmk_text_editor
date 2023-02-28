@@ -908,68 +908,12 @@ void EXTI9_5_IRQHandler(void) {
 }
 
 void configure_clock_rows_cols_interruptions(void) {
-	RCC->AHB1ENR |= RCC_AHB1ENR_GPIOCEN | 		// keypad
-					RCC_AHB1ENR_DMA1EN; 		// DMA
+	RCC->AHB1ENR |= RCC_AHB1ENR_GPIOCEN; // | 		// keypad
+					// RCC_AHB1ENR_DMA1EN; 		// DMA
 					// RCC_APB1ENR_TIM3EN;		// Timer TIM3	
 
 	// SYSCFGEN (INTERRUPT)
 	RCC->APB2ENR |= RCC_APB2ENR_SYSCFGEN;
-}
-
-void usart_configuration(void) {
-	// Clock
-	RCC->APB1ENR |= RCC_APB1ENR_USART2EN;
-
-	// UART - TDX at PA2, RDX at PA3
-	GPIOafConfigure(GPIOA,
-					2,
-					GPIO_OType_PP,
-					GPIO_Fast_Speed,
-					GPIO_PuPd_NOPULL,
-					GPIO_AF_USART2);
-
-	GPIOafConfigure(GPIOA,
-					3,
-					GPIO_OType_PP,
-					GPIO_Fast_Speed,
-					GPIO_PuPd_UP,
-					GPIO_AF_USART2);
-
-	// Transmission parameters
-	USART2->CR1 = USART_CR1_RE | USART_CR1_TE;
-	USART2->CR2 = 0;
-	USART2->BRR = (PCLK1_HZ + (BAUD / 2U)) / BAUD;
-	
-	// Send and receive via DMA
-	USART2->CR3 = USART_CR3_DMAT | USART_CR3_DMAR;
-
-	// Peripheral device activation
-	USART2->CR1 |= USART_CR1_UE;
-}
-
-void dma_configuration(void) {
-	// Sending stream DMA configuration
-	DMA1_Stream6->CR = 	4U << 25 |
-						DMA_SxCR_PL_1 |
-						DMA_SxCR_MINC |
-						DMA_SxCR_DIR_0 |
-						DMA_SxCR_TCIE;
-
-	DMA1_Stream6->PAR = (uint32_t)&USART2->DR;
-
-	// Receiving stream DMA configuration
-	DMA1_Stream5->CR = 	4U << 25 |
-						DMA_SxCR_PL_1 |
-						DMA_SxCR_MINC |
-						DMA_SxCR_TCIE;
-
-	DMA1_Stream5->PAR = (uint32_t)&USART2->DR;
-
-	// Clear IRQ flags, enable IRQs
-	DMA1->HIFCR = DMA_HIFCR_CTCIF6 | DMA_HIFCR_CTCIF5;
-
-	NVIC_EnableIRQ(DMA1_Stream6_IRQn);
-	NVIC_EnableIRQ(DMA1_Stream5_IRQn);
 }
 
 void configure(void) {
@@ -992,12 +936,6 @@ void configure(void) {
 	configure_gpio_keypad();
 
 	configure_rows_EXTI_NVIC();
-}
-
-void initialize_send_DMA(char* mess, int len) {
-	DMA1_Stream6->M0AR = (uint32_t)mess;
-	DMA1_Stream6->NDTR = len;
-	DMA1_Stream6->CR |= DMA_SxCR_EN;
 }
 
 int main() {
