@@ -31,11 +31,11 @@
 #define ROW3 			6
 #define ROW4 			7
 
-#define NUM_KEYS		4
+#define NUM_KEYS		4	// In a single column or row
 
 #define BSRR_UPPER_HALF	16
 
-#define PRESS_TRIES		6 // CHANGED FROM 4
+#define PRESS_TRIES		6
 
 #define TIM_COUNTERMODE_UP	0
 
@@ -50,17 +50,13 @@
 #define UPGRADE_TRESHOLD	500 	// Minimal value of millisecond to upgrade the letter
 
 // Action keys codes
-#define SPACE 			3
-#define NEWLINE			7
-#define CLEAR_ONCE		11
-#define DELETE_ALL		15
+#define SPACE 			3	// A
+#define NEWLINE			7	// B
+#define CLEAR_ONCE		11	// C
+#define DELETE_ALL		15	// D
 
 #define WRITE_NEW		16
 #define REPEAT_KEY		17
-
-#define NORMAL_MODE		0
-#define SPECIAL_MODE 	1
-#define ACTION_MODE		2
 
 #define ACTION_COL		3
 #define SPECIAL_ROW		3
@@ -73,8 +69,11 @@
 #define LAST_COLUMN		8
 #define LAST_ROW		4
 
+/*
+A struct for queueing tasks to handle
+*/
 typedef struct event {
-	int write_mode;
+	int write_mode;			// Action_mode: key_id, WRITE_NEW, REPEAT_KEY
 	char letter;
 } event;
 
@@ -118,19 +117,34 @@ char special_keys[NUM_SPECIAL][KEY_LEN_SPECIAL] = {
 									};
 
 
+// How many times interruption for keys has been detected
 int times_press_detected;
+// The current text line at the display
 int text_line;
+// The current column number at the display
 int current_cursor_col;
+
+// The code of the last pressed key
 int previous_key_code = -1;
 
-event queue_events[LIMIT_QUEUED];
+/*
+The queue of events (actions and letters to display)
+with queue features.
 
+The volatile keyword forces the compiler not to optimise
+actions related to the distinguished variables. It indicates
+that the variable vallues can be modified at any time
+and the compiler should not make any assumptions
+about the variables values.
+*/
 volatile int head;
 volatile int tail;
+event queue_events[LIMIT_QUEUED];
+
+// The position of the current letter on the button list
 int letter_modulo;
 
-int previous_key = -1;
-
+// For signalling purposes
 event empty_event = {-1, '?'};
 
 /****************
@@ -218,10 +232,12 @@ bool is_row_pressed(int row_pin) {
 	}
 }
 
+// Values: [0, 15]
 int calculate_key_index(int row_id, int col_id) {
 	return NUM_KEYS*(row_id - ROW1) + col_id;
 }
 
+// For special_keys table
 int get_special_key_index(int key_id) {
 	if (key_id == 0) {
 		return 0;
@@ -231,6 +247,7 @@ int get_special_key_index(int key_id) {
 	}
 }
 
+// For normal_keys table
 int get_normal_key_index(int key_id) {
 	if (key_id < 3) {
 		return key_id - 1;
@@ -243,6 +260,7 @@ int get_normal_key_index(int key_id) {
 	}
 }
 
+// A, B, C or D
 bool is_action_key(int key_id) {
 	return key_id%NUM_KEYS == ACTION_COL;
 }
@@ -252,7 +270,7 @@ event prepare_event_update_letter_modulo(int key_id, int mode) {
 
 	if (is_action_key(key_id)) {
 		result = (event) { 
-			.write_mode = key_id, // KEY ID AS ACTION 
+			.write_mode = key_id, // ACTION: key_id
 			.letter = '?'};
 	}
 	else if (key_id == SINGLE_SPECIAL || key_id/NUM_KEYS == SPECIAL_ROW) {
@@ -365,7 +383,8 @@ TIMER CONFIGURATION AND USAGE
 
 
 /*
-Initialization of the timer WITHOUT starting
+Initialization of the timer WITHOUT starting.
+TIM3 will be used for contact vibration exclusion.
 */
 void set_clock_and_initial_TIM3_registers_values_without_starting(void) {
 	/*
@@ -375,12 +394,11 @@ void set_clock_and_initial_TIM3_registers_values_without_starting(void) {
 	RCC->APB1ENR |= RCC_APB1ENR_TIM3EN;
 
 	// Incremental counting mode
-	// TIM_CR1_URS // Update request source, ored on slides
-	TIM3->CR1 = TIM_COUNTERMODE_UP;	// A control register
+	TIM3->CR1 = TIM_COUNTERMODE_UP;	// A control register 1
 
 	/* 
 	The default frequency is 16 MHz. Changing the prescaler value turns
-	an 16 MHz clock into a 1 MHz clock, which ticks once per 1 microsecond.
+	a 16 MHz clock into a 1 MHz clock which ticks once per 1 microsecond.
 
 	-1 results from the formula for decreasing the frequency of the counter update:
 	CLOCK_COUNTER3 = CLOCK_TIMER3 / (TIMER3->PSC + 1)
@@ -390,7 +408,7 @@ void set_clock_and_initial_TIM3_registers_values_without_starting(void) {
 	/*
 	Stores the value up to which the counter counts. 
 	
-	Since 1 microsecond = 0.0001 millisecond and we want to trigger an interruption
+	Since 1 microsecond = 0.001 millisecond and we want to trigger an interruption
 	after 10 ms, we decide that the counter has to count 10000 ticks.
 	*/
 	TIM3->ARR = 10000;	// An auto-reload register
@@ -433,7 +451,7 @@ void stop_bounce_timer_TIM3(void) {
 
 /**********************
 
-Configure TIM2 for external interuptions measurements
+Configure TIM2 for the measurement between external interrupts
 
 **********************/
 
@@ -444,13 +462,13 @@ void set_clock_and_initial_TIM2_registers_values_without_starting(void) {
 
 	/* 
 	The default frequency is 16 MHz. Changing the prescaler value turns
-	an 16 MHz clock into a 0.001 MHz clock, which ticks once per 1 millisecond.
+	an 16 MHz clock into a 0.001 MHz clock which ticks once per 1 millisecond.
 	*/
 	TIM2->PSC = 16000 - 1; // A prescaler
 
 	/*
-	Enable as long counting as possible; the register size is not known
-	(slides indicate 16- or 32-bit). Therefore the timer will measure on its own
+	Enable counting as long as possible. The register size is not known
+	(slides indicate 16- or 32-bit), therefore the timer will measure on its own
 	for at least one minute.
 	*/
 	TIM2->ARR = ~(TIM2->ARR & 0);	// An auto-reload register
@@ -488,6 +506,10 @@ void TIM2_IRQHandler(void) {
 	if (it_status & TIM_SR_UIF) {
 		TIM2->SR = ~TIM_SR_UIF;
 
+		/*
+		The last external interrupt has occured
+		too long ago to be meaningful
+		*/
 		stop_interval_timer_TIM2();
 		TIM2->CNT = 0;
 	}
@@ -496,9 +518,13 @@ void TIM2_IRQHandler(void) {
 	}
 }
 
+/*****************
 
+KEY PRESS DETECTION
+QUEUEING EVENTS
+LETTER IDENTIFICATION
 
-
+******************/
 
 int check_key_pressed_return_key_id(void) {
 
@@ -533,6 +559,14 @@ void contact_vibration_cleanup(void) {
 	NVIC_EnableIRQ(EXTI9_5_IRQn);
 }
 
+/*
+Action keys are identified in the beginning of the event processing function,
+therefore passing WRITE_NEW by default is safe in the context of the function
+usage.
+
+The function is used as a subtitute for upgrading the letter on the current
+button according to letter_modulo.
+*/
 event order_new_pos_for_writing(int key_id) {
 	letter_modulo = 0;
 	return prepare_event_update_letter_modulo(key_id, WRITE_NEW);
@@ -587,22 +621,21 @@ void TIM3_IRQHandler(void) {
 				previous_key_code = pressed_key_id;
 				
 
-
+				// Has been stopped before or has been turned off during the key id analysis
 				start_interval_timer_TIM2();
 				
 				contact_vibration_cleanup();
 			}
 		}
 		else {
-			// None of the key is pressed or has been pressed due to the contact vibration
-			
-			
+			// None of the keys is pressed or has been pressed due to the contact vibration
 			contact_vibration_cleanup();
 		}
 	}
 
 	if (it_status & TIM_SR_CC1IF) {
 		TIM3->SR = ~TIM_SR_CC1IF;
+		// Input capture flag; both input capture and update flags are set
 	}
 	
 }
@@ -716,20 +749,20 @@ void configure(void) {
 	configure_clock_rows_cols_interruptions();
 	LCDconfigure();
 
-	// Clock needs some time to be turned on // taktowanie
+	// Clock needs some time to be turned on
 	__NOP();
 
-	// Configure interval clock
+	// Configure the interval measurement clock
 	set_clock_and_initial_TIM2_registers_values_without_starting();
 	enable_interruptions_TIM2();
 
-	// Configure contact vibration detecting clock
+	// Configure the contact vibration detection clock
 	set_clock_and_initial_TIM3_registers_values_without_starting();
 	enable_interruptions_TIM3();
 
 	set_columns_low_state();
+	
 	configure_gpio_keypad();
-
 	configure_rows_EXTI_NVIC();
 }
 
