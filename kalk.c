@@ -7,107 +7,7 @@
 
 // URUCHOM RUN /opt/arm/stm32/ocd/qfn4 
 
-#define BUFF_SIZE 30
-#define NUM_BTN 7
-#define NUM_BTN_LOW_ACT 6 // The number of buttons activated with low current
-#define COMMAND_LEN 3
-#define ERR -1
-#define MESS_NUM 14
 #define LIMIT_QUEUED 100
-
-// buttons
-#define USER_BTN_GPIO GPIOC
-#define USER_BTN_PIN 13
-
-#define LEFT_BTN_GPIO GPIOB
-#define LEFT_BTN_PIN 3
-#define RIGHT_BTN_GPIO GPIOB
-#define RIGHT_BTN_PIN 4
-#define UP_BTN_GPIO GPIOB
-#define UP_BTN_PIN 5
-#define DOWN_BTN_GPIO GPIOB
-#define DOWN_BTN_PIN 6
-#define ACTION_BTN_GPIO GPIOB
-#define ACTION_BTN_PIN 10
-
-#define AT_BTN_GPIO GPIOA
-#define AT_BTN_PIN 0
-
-
-// button codes
-#define USER_BTN 0
-#define LEFT_BTN 1
-#define RIGHT_BTN 2
-#define UP_BTN 3
-#define DOWN_BTN 4
-#define ACTION_BTN 5
-#define AT_MODE 6
-
-// action codes
-#define RED_ON "LR1"
-#define RED_OFF "LR0"
-#define RED_TOG "LRT"
-#define GREEN_ON "LG1"
-#define GREEN_OFF "LG0"
-#define GREEN_TOG "LGT"
-#define BLUE_ON "LB1"
-#define BLUE_OFF "LB0"
-#define BLUE_TOG "LBT"
-#define GREEN2_ON "Lg1"
-#define GREEN2_OFF "Lg0"
-#define GREEN2_TOG "LgT"
-
-#define PRESSED 0
-#define RELEASED 1
-
-#define LED_ON 0
-#define LED_OFF 1
-
-// CR1
-// tryb
-#define USART_Mode_Rx_Tx (USART_CR1_RE | \
-USART_CR1_TE)
-#define USART_Enable USART_CR1_UE
-
-#define USART_WordLength_8b 0x0000
-#define USART_WordLength_9b USART_CR1_M
-
-#define USART_Parity_No 0x0000
-#define USART_Parity_Even USART_CR1_PCE
-#define USART_Parity_Odd (USART_CR1_PCE | \
-USART_CR1_PS)
-
-// CR2
-#define USART_StopBits_1 0x0000
-#define USART_StopBits_0_5 0x1000
-#define USART_StopBits_2 0x2000
-#define USART_StopBits_1_5 0x3000
-#define USART_FlowControl_None 0x0000
-		
-
-// BRR
-#define HSI_HZ 16000000U
-#define PCLK1_HZ HSI_HZ
-// #define BAUD_RATE 9600U
-#define BAUD 9600U
-
-// LEDs
-#define RED_LED_GPIO 	GPIOA
-#define GREEN_LED_GPIO 	GPIOA
-#define BLUE_LED_GPIO 	GPIOB
-#define GREEN2_LED_GPIO GPIOA
-
-#define RED_LED_PIN 	6
-#define GREEN_LED_PIN 	7
-#define BLUE_LED_PIN 	0
-#define GREEN2_LED_PIN 	5
-
-#define RED_LED 0
-#define GREEN_LED 1
-#define BLUE_LED 2
-#define GREEN2_LED 3
-
-#define NUM_LEDS 4
 
 
 /* KEYBOARD DEFINES */
@@ -225,74 +125,15 @@ int text_line;
 int current_cursor_col;
 int previous_key_code = -1;
 
-#define RedLEDon() \
-RED_LED_GPIO->BSRR = 1 << (RED_LED_PIN + 16)
-#define RedLEDoff() \
-RED_LED_GPIO->BSRR = 1 << RED_LED_PIN
-
-#define GreenLEDon() \
-GREEN_LED_GPIO->BSRR = 1 << (GREEN_LED_PIN + 16)
-#define GreenLEDoff() \
-GREEN_LED_GPIO->BSRR = 1 << GREEN_LED_PIN
-
-#define BlueLEDon() \
-BLUE_LED_GPIO->BSRR = 1 << (BLUE_LED_PIN + 16)
-#define BlueLEDoff() \
-BLUE_LED_GPIO->BSRR = 1 << BLUE_LED_PIN
-
-
-#define Green2LEDon() \
-GREEN2_LED_GPIO->BSRR = 1 << GREEN2_LED_PIN
-#define Green2LEDoff() \
-GREEN2_LED_GPIO->BSRR = 1 << (GREEN2_LED_PIN + 16)
-
-int pins[NUM_BTN_LOW_ACT] = {USER_BTN_PIN, LEFT_BTN_PIN, RIGHT_BTN_PIN, UP_BTN_PIN, DOWN_BTN_PIN, ACTION_BTN_PIN};
-GPIO_TypeDef* gpios[NUM_BTN_LOW_ACT] = {USER_BTN_GPIO, LEFT_BTN_GPIO, RIGHT_BTN_GPIO, UP_BTN_GPIO, DOWN_BTN_GPIO, ACTION_BTN_GPIO};
-
-char* messages[MESS_NUM] = {"USER PRESSED\r\n", "USER RELEASED\r\n", "LEFT PRESSED\r\n", "LEFT RELEASED\r\n", "RIGHT PRESSED\r\n", "RIGH RELEASED\r\n", "UP PRESSED\r\n", 
-"UP RELEASED\r\n", "DOWN PRESSED\r\n", "DOWN RELEASED\r\n", "FIRE PRESSED\r\n", 
-"FIRE RELEASED\r\n", "MODE PRESSED\r\n", "MODE RELEASED\r\n"};
-
-int mess_length[MESS_NUM];
-
-int queued_mess_id[LIMIT_QUEUED];
-
 event queue_events[LIMIT_QUEUED];
 
 volatile int head;
 volatile int tail;
 int letter_modulo;
 
-int previous_key;
+int previous_key = -1;
 
 event empty_event = {-1, '?'};
-
-void initialize_mess_length(void) {
-	for (int i = 0; i < MESS_NUM; i++) {
-		mess_length[i] = strlen(messages[i]);
-	}
-}
-
-// which button was here
-
-int check_single_state(int id) {
-	if (id == AT_MODE) {
-		if ((AT_BTN_GPIO->IDR >> AT_BTN_PIN) & 1) {
-			return PRESSED;
-		}
-		else {
-			return RELEASED;
-		}
-	}
-	else {
-		if (!(gpios[id]->IDR >> pins[id] & 1)) {
-			return PRESSED;
-		}
-		else {
-			return RELEASED;
-		}
-	}
-}
 
 /****************
 
@@ -769,47 +610,6 @@ void TIM3_IRQHandler(void) {
 }
 
 
-/*************************
-
-LEDS
-
-**************************/
-
-void configure_clock_gpio_leds(void) {
-	RCC->AHB1ENR |= RCC_AHB1ENR_GPIOAEN | 
-					RCC_AHB1ENR_GPIOBEN;	
-
-	RedLEDoff();
-	GreenLEDoff();
-	BlueLEDoff();
-	Green2LEDoff();
-
-	GPIOoutConfigure(RED_LED_GPIO,
-					RED_LED_PIN,
-					GPIO_OType_PP,
-					GPIO_Low_Speed,
-					GPIO_PuPd_NOPULL);
-
-	GPIOoutConfigure(GREEN_LED_GPIO,
-					GREEN_LED_PIN,
-					GPIO_OType_PP,
-					GPIO_Low_Speed,
-					GPIO_PuPd_NOPULL);
-	
-	GPIOoutConfigure(BLUE_LED_GPIO,
-					BLUE_LED_PIN,
-					GPIO_OType_PP,
-					GPIO_Low_Speed,
-					GPIO_PuPd_NOPULL);
-
-	GPIOoutConfigure(GREEN2_LED_GPIO,
-					GREEN2_LED_PIN,
-					GPIO_OType_PP,
-					GPIO_Low_Speed,
-					GPIO_PuPd_NOPULL);
-}
-
-
 /**********
 
 KEYPAD CONFIGURATION
@@ -916,7 +716,6 @@ void configure_clock_rows_cols_interruptions(void) {
 
 void configure(void) {
 	configure_clock_rows_cols_interruptions();
-	// configure_clock_gpio_leds();
 	LCDconfigure();
 
 	// Clock needs some time to be turned on // taktowanie
@@ -938,7 +737,6 @@ void configure(void) {
 
 int main() {
 	configure();
-	// BlueLEDon();
 
 	while (1) {
 		if (!empty_queue()) {
