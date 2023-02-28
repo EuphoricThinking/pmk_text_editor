@@ -908,9 +908,7 @@ void EXTI9_5_IRQHandler(void) {
 }
 
 void configure_clock_rows_cols_interruptions(void) {
-	RCC->AHB1ENR |= RCC_AHB1ENR_GPIOCEN; // | 		// keypad
-					// RCC_AHB1ENR_DMA1EN; 		// DMA
-					// RCC_APB1ENR_TIM3EN;		// Timer TIM3	
+	RCC->AHB1ENR |= RCC_AHB1ENR_GPIOCEN; 		// keypad
 
 	// SYSCFGEN (INTERRUPT)
 	RCC->APB2ENR |= RCC_APB2ENR_SYSCFGEN;
@@ -918,7 +916,7 @@ void configure_clock_rows_cols_interruptions(void) {
 
 void configure(void) {
 	configure_clock_rows_cols_interruptions();
-	configure_clock_gpio_leds();
+	// configure_clock_gpio_leds();
 	LCDconfigure();
 
 	// Clock needs some time to be turned on // taktowanie
@@ -940,7 +938,7 @@ void configure(void) {
 
 int main() {
 	configure();
-	BlueLEDon();
+	// BlueLEDon();
 
 	while (1) {
 		if (!empty_queue()) {
