@@ -224,6 +224,7 @@ char special_keys[NUM_SPECIAL][KEY_LEN_SPECIAL] = {
 int times_press_detected;
 int text_line;
 int current_cursor_col;
+int setme;
 
 #define RedLEDon() \
 RED_LED_GPIO->BSRR = 1 << (RED_LED_PIN + 16)
@@ -259,11 +260,18 @@ int queued_mess_id[LIMIT_QUEUED];
 
 event queue_events[LIMIT_QUEUED];
 
-int head;
-int tail;
+volatile int head;
+volatile int tail;
 int letter_modulo;
 
 event empty_event = {-1, '?', -1};
+
+void turn_all_off() {
+	RedLEDoff();
+	BlueLEDoff();
+	GreenLEDoff();
+	Green2LEDoff();
+}
 
 void initialize_mess_length(void) {
 	for (int i = 0; i < MESS_NUM; i++) {
@@ -322,6 +330,7 @@ bool empty_queue(void) {
 }
 
 event pop(void) {
+	// LCDputcharWrap('R');
 	if (head == LIMIT_QUEUED || head == tail) {
 		return empty_event;
 	}
@@ -333,9 +342,11 @@ event pop(void) {
 
 void push(event id) {
 	if (tail != LIMIT_QUEUED) {
+		// LCDputcharWrap('B');
 		queue_events[tail++] = id;
 	}
 	else if (head == tail) {
+		// LCDputcharWrap('A');
 		head = 0;
 		tail = 0;
 		queue_events[tail++] = id;
@@ -506,6 +517,10 @@ void update_text_line_current_cursor_position_backward(void) {
 
 void process_an_event() {
 	event to_display = pop();
+
+	turn_all_off();
+	GreenLEDon();
+	LCDputcharWrap('P');
 
 	int mode_code = to_display.write_mode;
 
@@ -790,6 +805,7 @@ void TIM3_IRQHandler(void) {
 
 				// LCDputcharWrap('B');
 				event to_be_queued;
+				//LCDputchar('H');
 				
 				if (is_interval_timer_on()) {
 					uint32_t counted_ticks = TIM2->CNT;
@@ -818,6 +834,17 @@ void TIM3_IRQHandler(void) {
 				
 				push(to_be_queued);
 				
+
+				if (!empty_queue()) {
+					//LCDputcharWrap('F');
+					// LCDputcharWrap((tail - head) + 48);
+					setme++;
+				}
+				else {
+					//LCDputcharWrap('E');
+				}
+
+
 				start_interval_timer_TIM2();
 				
 				contact_vibration_cleanup();
@@ -835,6 +862,9 @@ void TIM3_IRQHandler(void) {
 		TIM3->SR = ~TIM_SR_CC1IF;
 		// TODO
 	}
+
+	// turn_all_off();
+	
 }
 
 /*
@@ -1131,7 +1161,6 @@ void DMA1_Stream6_IRQHandler() {
 }
 */
 
-
 int main() {
 	configure();
 	// initialize_mess_length();
@@ -1152,11 +1181,25 @@ int main() {
 
 	// }
 
-
+	//int prev = 0;
+	LCDputchar('W');
 	while (1) {
+		// turn_all_off();
+		// RedLEDon();
+
 		if (!empty_queue()) {
+			// LCDputchar('O');
+			
+			// turn_all_off();
+			// GreenLEDon();
+			
 			process_an_event();
 		}
+		// if (setme != prev) {
+		// 	prev = setme;
+		// 	LCDputcharWrap((tail - head) + 48);
+		// 	// process_an_event();
+		// }
 	}
 	
 	return 0;
