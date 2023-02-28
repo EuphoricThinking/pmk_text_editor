@@ -1,6 +1,6 @@
 *.o
 # .bin file included
-kalk.elf
+text_editor.elf
 a.out
 try_struct.c
 .ipynb_checkpoints/
