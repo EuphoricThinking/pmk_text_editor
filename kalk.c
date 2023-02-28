@@ -468,8 +468,8 @@ PROCESS EVENTS
 ********************/
 
 bool is_writing_possible(void) {
-	if (current_cursor_col == LAST_COLUMN) {
-		if (text_line == LAST_ROW) {
+	if (current_cursor_col == 0) {
+		if (text_line == ROW_ROLLBACK) {
 			return false;
 		}
 		else {
@@ -485,9 +485,10 @@ void update_text_line_current_cursor_position_forward(void) {
 	current_cursor_col++;
 	if (current_cursor_col == COL_ROLLBACK) {
 		text_line++;
-		if (text_line != ROW_ROLLBACK) {
-			current_cursor_col = 0;
-		}
+		// if (text_line != ROW_ROLLBACK) {
+		// 	current_cursor_col = 0;
+		// }
+		current_cursor_col = 0;
 	}
 }
 
