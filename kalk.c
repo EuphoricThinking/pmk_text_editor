@@ -176,7 +176,6 @@ USART_CR1_PS)
 #define LAST_ROW		4
 
 typedef struct event {
-	int code;
 	int write_mode;
 	char letter;
 	int letter_code;
@@ -264,7 +263,7 @@ int head;
 int tail;
 int letter_modulo;
 
-event empty_event = {-1, -1, '?', -1};
+event empty_event = {-1, '?', -1};
 
 void initialize_mess_length(void) {
 	for (int i = 0; i < MESS_NUM; i++) {
@@ -439,19 +438,21 @@ event prepare_event_update_letter_modulo(int key_id, int mode) {
 	event result;
 
 	if (is_action_key(key_id)) {
-		result = (event) { .code = ACTION_MODE, .write_mode = -1, .letter = '?', 
+		result = (event) { 
+			.write_mode = ACTION_MODE, 
+			.letter = '?', 
 			.letter_code = key_id};
 	}
 	else if (key_id == SINGLE_SPECIAL || key_id/NUM_KEYS == SPECIAL_ROW) {
 		letter_modulo %= KEY_LEN_SPECIAL;
-		result = (event) { .code = SPECIAL_MODE,
+		result = (event) {
 			.write_mode = mode,
 			.letter = special_keys[get_special_key_index(key_id)][letter_modulo],
 			.letter_code = key_id};
 	}
 	else {
 		letter_modulo %= KEY_LEN_NORMAL;
-		result = (event) { .code = NORMAL_MODE, 
+		result = (event) { 
 			.write_mode = mode,
 			.letter = normal_keys[get_normal_key_index(key_id)][letter_modulo],
 			.letter_code = key_id};
@@ -498,10 +499,10 @@ void update_text_line_current_cursor_position_backward(void) {
 	}
 }
 
-void process_event() {
+void process_an_event() {
 	event to_display = pop();
 
-	int mode_code = to_display.code;
+	int mode_code = to_display.write_mode;
 
 	// Always enable clearing
 	if (mode_code == ACTION_MODE) {
@@ -533,6 +534,17 @@ void process_event() {
 			current_cursor_col = 0;
 			text_line++;
 		}
+	}
+	else if (mode_code == REPEAT_KEY) {
+		update_text_line_current_cursor_position_backward();
+		LCDgoto(text_line, current_cursor_col);
+		LCDputcharWrap(to_display.letter);
+		update_text_line_current_cursor_position_forward();
+	}
+	// WRITE_NEW
+	else if (is_writing_possible()) {
+		LCDputcharWrap(to_display.letter);
+		update_text_line_current_cursor_position_forward();
 	}
 }
 
