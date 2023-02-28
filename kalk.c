@@ -351,12 +351,13 @@ event peek(void) {
 	}
 }
 
-int get_last_code(void) {
-	if (!empty_queue()) {
-		return queue_events[tail - 1].letter_code;
+bool is_last_letter_same_as_current(int key_id) {
+	if (empty_queue()
+		|| key_id != queue_events[tail - 1].letter_code) {
+			return false;
 	}
 	else {
-		return -1;
+		return true;
 	}
 }
 
@@ -802,7 +803,7 @@ void TIM3_IRQHandler(void) {
 					*/
 					if (counted_ticks <= UPGRADE_TRESHOLD
 						&& !is_action_key(pressed_key_id)
-						&& get_last_code() == pressed_key_id) {
+						&& is_last_letter_same_as_current(pressed_key_id)) {
 							letter_modulo++;
 							to_be_queued = 
 								prepare_event_update_letter_modulo(pressed_key_id, REPEAT_KEY);
