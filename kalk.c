@@ -225,6 +225,7 @@ int times_press_detected;
 int text_line;
 int current_cursor_col;
 int setme;
+int last_letter = -1;
 
 #define RedLEDon() \
 RED_LED_GPIO->BSRR = 1 << (RED_LED_PIN + 16)
@@ -861,7 +862,8 @@ void TIM3_IRQHandler(void) {
 					*/
 					if (counted_ticks <= UPGRADE_TRESHOLD
 						&& !is_action_key(pressed_key_id)
-						&& is_last_letter_same_as_current(pressed_key_id)) {
+						&& last_letter == pressed_key_id) {
+						// && is_last_letter_same_as_current(pressed_key_id)) {
 							LCDputcharWrap('%');
 							letter_modulo++;
 							to_be_queued = 
@@ -877,6 +879,8 @@ void TIM3_IRQHandler(void) {
 				}
 				
 				push(to_be_queued);
+
+				last_letter = pressed_key_id;
 				
 
 				if (!empty_queue()) {
