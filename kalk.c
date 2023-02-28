@@ -1148,6 +1148,9 @@ int main() {
 
 
 	while (1) {
+		if (!empty_queue()) {
+			process_an_event();
+		}
 	}
 	
 	return 0;
