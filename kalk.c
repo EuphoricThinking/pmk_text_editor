@@ -178,7 +178,7 @@ USART_CR1_PS)
 typedef struct event {
 	int write_mode;
 	char letter;
-	int letter_code;
+	int key_code;
 } event;
 
 int key_pins[NUM_KEYS*2] = {PIN_COL1, PIN_COL2, PIN_COL3, PIN_COL4,
@@ -353,7 +353,7 @@ event peek(void) {
 
 bool is_last_letter_same_as_current(int key_id) {
 	if (empty_queue()
-		|| key_id != queue_events[tail - 1].letter_code) {
+		|| key_id != queue_events[tail - 1].key_code) {
 			return false;
 	}
 	else {
@@ -442,21 +442,21 @@ event prepare_event_update_letter_modulo(int key_id, int mode) {
 		result = (event) { 
 			.write_mode = ACTION_MODE, 
 			.letter = '?', 
-			.letter_code = key_id};
+			.key_code = key_id};
 	}
 	else if (key_id == SINGLE_SPECIAL || key_id/NUM_KEYS == SPECIAL_ROW) {
 		letter_modulo %= KEY_LEN_SPECIAL;
 		result = (event) {
 			.write_mode = mode,
 			.letter = special_keys[get_special_key_index(key_id)][letter_modulo],
-			.letter_code = key_id};
+			.key_code = key_id};
 	}
 	else {
 		letter_modulo %= KEY_LEN_NORMAL;
 		result = (event) { 
 			.write_mode = mode,
 			.letter = normal_keys[get_normal_key_index(key_id)][letter_modulo],
-			.letter_code = key_id};
+			.key_code = key_id};
 	}
 
 	return result;
@@ -494,7 +494,7 @@ void update_text_line_current_cursor_position_forward(void) {
 }
 
 void update_text_line_current_cursor_position_backward(void) {
-	if (current_cursor_col > 0 && text_line > 0) {
+	if ((current_cursor_col + text_line) > 0) {
 		current_cursor_col--;
 
 		if (current_cursor_col < 0) {
@@ -516,7 +516,7 @@ void process_an_event() {
 		C - CLEAR_ONCE
 		D - DELETE_ALL
 		*/
-		mode_code = to_display.letter_code;
+		mode_code = to_display.key_code;
 
 		if (mode_code == DELETE_ALL) {
 			LCDclear();
