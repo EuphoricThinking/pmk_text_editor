@@ -750,10 +750,10 @@ int check_key_pressed_return_key_id(void) {
 				}
 
 				// LCDclear();
-				LCDputchar(48 + row_id);
-				LCDputchar(' ');
-				LCDputchar(48 + col_id);
-				LCDputchar('T');
+				// LCDputchar(48 + row_id);
+				// LCDputchar(' ');
+				// LCDputchar(48 + col_id);
+				// LCDputchar('T');
 
 				set_high_state(key_pins[col_id]); // ADDED
 
@@ -812,12 +812,12 @@ void TIM3_IRQHandler(void) {
 				times_press_detected++;
 			}
 			else {
-				LCDputcharWrap('C');
-				// LCDputcharWrap(48 + (pressed_key_id == 0));
-				// LCDputcharWrap('_');
-				LCDputcharWrap(48 + (pressed_key_id/10));
-				LCDputcharWrap(48 + (pressed_key_id%10));
-				LCDputcharWrap('\n');
+				// LCDputcharWrap('C');
+				// // LCDputcharWrap(48 + (pressed_key_id == 0));
+				// // LCDputcharWrap('_');
+				// LCDputcharWrap(48 + (pressed_key_id/10));
+				// LCDputcharWrap(48 + (pressed_key_id%10));
+				// LCDputcharWrap('\n');
 				// TODO 
 				// A key is probably REALLY pressed
 				//push(calculate_key_index(row_id, col_id));
