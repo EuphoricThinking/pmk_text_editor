@@ -137,7 +137,7 @@ USART_CR1_PS)
 
 #define BSRR_UPPER_HALF	16
 
-#define PRESS_TRIES		4
+#define PRESS_TRIES		4 // CHANGED FROM 4
 
 #define TIM_COUNTERMODE_UP	0
 
@@ -178,7 +178,6 @@ USART_CR1_PS)
 typedef struct event {
 	int write_mode;
 	char letter;
-	int key_code;
 } event;
 
 int key_pins[NUM_KEYS*2] = {PIN_COL1, PIN_COL2, PIN_COL3, PIN_COL4,
@@ -267,7 +266,7 @@ int letter_modulo;
 
 int previous_key;
 
-event empty_event = {-1, '?', -1};
+event empty_event = {-1, '?'};
 
 void turn_all_off() {
 	RedLEDoff();
@@ -365,17 +364,17 @@ event peek(void) {
 	}
 }
 
-bool is_last_letter_same_as_current(int key_id) {
-	LCDputcharWrap('^');
-	LCDputcharWrap(48 + empty_queue());
-	if (empty_queue()
-		|| key_id != queue_events[tail - 1].key_code) {
-			return false;
-	}
-	else {
-		return true;
-	}
-}
+// bool is_last_letter_same_as_current(int key_id) {
+// 	LCDputcharWrap('^');
+// 	LCDputcharWrap(48 + empty_queue());
+// 	if (empty_queue()
+// 		|| key_id != queue_events[tail - 1].key_code) {
+// 			return false;
+// 	}
+// 	else {
+// 		return true;
+// 	}
+// }
 
 
 /******************
@@ -456,23 +455,20 @@ event prepare_event_update_letter_modulo(int key_id, int mode) {
 
 	if (is_action_key(key_id)) {
 		result = (event) { 
-			.write_mode = ACTION_MODE, 
-			.letter = '?', 
-			.key_code = key_id};
+			.write_mode = key_id, // KEY ID AS ACTION 
+			.letter = '?'};
 	}
 	else if (key_id == SINGLE_SPECIAL || key_id/NUM_KEYS == SPECIAL_ROW) {
 		letter_modulo %= KEY_LEN_SPECIAL;
 		result = (event) {
 			.write_mode = mode,
-			.letter = special_keys[get_special_key_index(key_id)][letter_modulo],
-			.key_code = key_id};
+			.letter = special_keys[get_special_key_index(key_id)][letter_modulo]};
 	}
 	else {
 		letter_modulo %= KEY_LEN_NORMAL;
 		result = (event) { 
 			.write_mode = mode,
-			.letter = normal_keys[get_normal_key_index(key_id)][letter_modulo],
-			.key_code = key_id};
+			.letter = normal_keys[get_normal_key_index(key_id)][letter_modulo]};
 	}
 
 	return result;
@@ -529,14 +525,14 @@ void process_an_event() {
 
 	int mode_code = to_display.write_mode;
 
-	if (mode_code == ACTION_MODE) {
+	if (is_action_key(mode_code)) {
 		/*
 		A - SPACE
 		B - NEWLINE
 		C - CLEAR_ONCE
 		D - DELETE_ALL
 		*/
-		mode_code = to_display.key_code;
+		// mode_code = to_display.key_code;
 
 		if (mode_code == DELETE_ALL) {
 			LCDclear();
@@ -550,7 +546,8 @@ void process_an_event() {
 			LCDgoto(text_line, current_cursor_col);
 		}
 		else if (mode_code == SPACE && is_writing_possible()) {
-			LCDputcharWrap(' ');
+			// LCDputcharWrap(' ');
+			LCDputchar(' ');
 			update_text_line_current_cursor_position_forward();
 		}
 		else if (mode_code == NEWLINE && text_line != LAST_ROW) {
